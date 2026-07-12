@@ -1,6 +1,5 @@
 <div align="center">
-  <h1>Vascular Pressure Measurment System</h1>
-  <h1>VRP</h1>
+  <h1>Vascular Pressure Measurment System<br>VRP</h1>
   <p><strong>Valós Idejű Adatgyűjtő és Elemző Rendszer</strong></p>
   <p><em>Diplomamunka / Szakdolgozat Szoftverkomponens</em></p>
 </div>
@@ -10,6 +9,8 @@
 A **Venduino** egy komplex mérnök-informatikai célfeladat megvalósítására létrehozott asztali kliensalkalmazás. A rendszer egy egyedi fejlesztésű mikrokontrolleres mérőeszköz (Arduino) és egy .NET alapú vizualizációs szoftver (Windows Forms) szoros együttműködésére épül. Elsődleges feladata az analóg szenzorbemenetek nagy sebességű, valós idejű mintavételezése, a hibatűrő soros adatátvitel, a szálbiztos pufferelés, valamint a gyűjtött adathalmaz utólagos matematikai analízise.
 
 A szoftverarchitektúra az **eseményvezérelt programszerkezet**, a **többszálú végrehajtás** (Multithreading) és a **numerikus módszerek** gyakorlati alkalmazását hivatott demonstrálni.
+
+A teljes dokumentáció a Docs mappában található (VIP)
 
 ## Rendszerarchitektúra és Szoftverstruktúra
 
