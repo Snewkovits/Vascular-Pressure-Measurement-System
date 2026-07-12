@@ -91,7 +91,7 @@ namespace Vascular_Pressure_Measurement_System
             {
                 Invoke(new Action(() =>
                 {
-                    this.Text = "Venduino - Device connected";
+                    this.Text = "VRP - Device connected";
                     EnableButton(StartMeasuring);
                 }));
             }
@@ -99,7 +99,7 @@ namespace Vascular_Pressure_Measurement_System
             {
                 Invoke(new Action(() =>
                 {
-                    this.Text = "Venduino - Device disconnected";
+                    this.Text = "VRP - Device disconnected";
                     DisableButton(ForceStopButton);
                     DisableButton(StartMeasuring);
                     if (settingsForm != null)

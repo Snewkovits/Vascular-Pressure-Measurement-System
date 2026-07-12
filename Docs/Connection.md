@@ -35,7 +35,7 @@ A metódus az alábbi lépéseken megy keresztül a végrehajtás során:
 
 ## Példa használat
 ```cs
-using VenduinoThesis.Utils;
+using Vascular_Pressure_Measurement_System.Utils;
 using System.IO.Ports;
 
 // Megpróbáljuk megkeresni az eszközt a soros portokon
@@ -94,7 +94,7 @@ Az ellenőrzési ciklus végén a szál 1000 ezredmásodpercre (Thread.Sleep(100
 
 ## Példa használat
 A metódust általában az alkalmazás indításakor vagy a kommunikációs modul inicializálásakor kell egyszer meghívni:
-using VenduinoThesis.Utils;
+using Vascular_Pressure_Measurement_System.Utils;
 ```cs
 // Folyamatos kapcsolat-ellenőrzés elindítása a háttérben
 Connection.ContinousTest();
@@ -271,7 +271,7 @@ A fogadott üzenet felépítése megegyezik a küldöttével, azzal a kitételle
 
 ## Példa használat
 ```cs
-using VenduinoThesis.Utils;
+using Vascular_Pressure_Measurement_System.Utils;
 
 // Paraméter beállító parancs küldése
 string[] response = Connection.SendMessage(Connection.CommandType.SET_PARAM, "TEMP=22");
@@ -434,7 +434,7 @@ Fogadásnál (ACK): <ID|CommandType.ACK|DATA|CHK>
 Az alábbi példák bemutatják, hogyan kell használni a konstansokat parancsküldésnél, illetve a beérkező válaszok kiértékelésénél:
 1. Parancs küldése
 ```cs
-using VenduinoThesis.Utils;
+using Vascular_Pressure_Measurement_System.Utils;
 
 // A mérés elindítása a konstans használatával
 string[] response = Connection.SendMessage(Connection.CommandType.START_MEASURE, "");
@@ -442,7 +442,7 @@ string[] response = Connection.SendMessage(Connection.CommandType.START_MEASURE,
 
 2. Válasz validálása
 ```cs
-using VenduinoThesis.Utils;
+using Vascular_Pressure_Measurement_System.Utils;
 
 string[] response = Connection.SendMessage(Connection.CommandType.PING, "");
 

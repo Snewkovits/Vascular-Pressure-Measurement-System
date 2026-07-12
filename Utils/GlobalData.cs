@@ -28,7 +28,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
         public static void SetParameters(int minDelta = default, int fallTreshold = default)
         {
             string localPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string appFolder = Path.Combine(localPath, "Venduino");
+            string appFolder = Path.Combine(localPath, "Vascular_Pressure_Measurement_System");
 
             if (!Directory.Exists(appFolder)) Directory.CreateDirectory(appFolder);
 
