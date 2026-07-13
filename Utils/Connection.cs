@@ -9,12 +9,11 @@ namespace Vascular_Pressure_Measurement_System.Utils
     public static class Connection
     {
         public static bool isConnected = false;
-        //public static bool isBusy = false;
         public static bool stopConnection = false;
         public static SerialPort serialPort = null;
 
         private static int msgId = 0;
-        private static int faildAttempt = 0;
+        public static int faildAttempt = 0;
 
         internal static readonly object _serialPortLock = new object();
 
@@ -27,8 +26,8 @@ namespace Vascular_Pressure_Measurement_System.Utils
                 serialPort = new SerialPort(port, 1000000, Parity.None, 8, StopBits.One) 
                 {
                     Encoding = Encoding.ASCII,
-                    ReadTimeout = 1000,
-                    WriteTimeout = 1000,
+                    ReadTimeout = 100,
+                    WriteTimeout = 100,
                     ReadBufferSize = 65536,
                     WriteBufferSize = 65536
                 };
@@ -77,7 +76,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
                         if (serialPort == null || !serialPort.IsOpen)
                         {
                             serialPort = GetSerialPort();
-                            GlobalData.SetParameters();
+                            Configuration.SetParameters();
 
                             if (serialPort != null)
                             {
@@ -120,7 +119,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
                         }
                     }
 
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
                 }
             }).Start();
         }
@@ -264,6 +263,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
             public const string GET_PARAM = "GET_PARAM";
             public const string START_MEASURE = "START_MEASURE";
             public const string STOP_MEASURE = "STOP_MEASURE";
+            public const string GET_MEASURE_DATA = "GET_MEASURE_DATA";
             public const string ACK = "ACK";
             public const string ERR = "ERR";
         }

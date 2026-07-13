@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -8,7 +9,6 @@ namespace Vascular_Pressure_Measurement_System.Utils
 {
     internal class Measure
     {
-        bool canStart = false;
         bool stopMeasure = false;
         bool running = false;
 
@@ -57,16 +57,25 @@ namespace Vascular_Pressure_Measurement_System.Utils
                 {
                     while (!stopMeasure && Connection.isConnected)
                     {
-                        data = Connection.ReadMessage();
+                        data = Connection.SendMessage(Connection.CommandType.GET_MEASURE_DATA, "");
 
                         // Ha hiba történt a beolvasásnál (pl. timeout), ne tegyük a queue-ba
-                        if (data[0] == "ERR") continue;
+                        if (data[0] == "ERR")
+                        {
+                            Connection.faildAttempt++;
+                            if (Connection.faildAttempt == 3)
+                            {
+                                Connection.stopConnection = true;
+                                break;
+                            }
+                        }
+
 
                         // Ha az Arduino magától állt le (FALL_DETECTED)
                         if (data[0] == "STOP_MEASURE") break;
 
                         // Ha normál mérési adat jött
-                        if (data[0] == "MEASURE")
+                        if (data[0] == "MEASURE_DATA")
                         {
                             lock (_lock)
                             {

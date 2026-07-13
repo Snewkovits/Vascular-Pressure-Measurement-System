@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using Vascular_Pressure_Measurement_System.Utils;
@@ -16,30 +17,11 @@ namespace Vascular_Pressure_Measurement_System.Forms
 
             if (Connection.isConnected)
             {
-                string[] minDelta = Connection.SendMessage("GET_PARAM", "MD");
-                string[] fallTreshold = Connection.SendMessage("GET_PARAM", "FT");
+                Dictionary<string, string> configs = Configuration.ReadConfiguration();
 
-                // válaszok validálása
-                if (minDelta == null || fallTreshold == null
-                    || minDelta.Length < 2 || fallTreshold.Length < 2)
-                {
-                    MessageBox.Show("Invalid parameter response from device.", "Parameters", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    CloseForm();
-                    return;
-                }
+                parameterMinDelta.Text = configs["MIN_DELTA"];
+                parameterFallTreshold.Text = configs["FALL_THRESHOLD"];
 
-                if (minDelta[0] != Connection.CommandType.ACK || fallTreshold[0] != Connection.CommandType.ACK)
-                {
-                    MessageBox.Show("Failed to retrieve parameters! Please try again later.", "Parameters", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    CloseForm();
-                    return;
-                }
-
-                parameterMinDelta.Text = minDelta[1];
-                parameterFallTreshold.Text = fallTreshold[1];
-
-                prev_minDelta = int.TryParse(parameterMinDelta.Text, out var pd) ? pd : -1;
-                prev_fallTreshold = int.TryParse(parameterFallTreshold.Text, out var pf) ? pf : -1;
             }
             else
             {
@@ -71,8 +53,14 @@ namespace Vascular_Pressure_Measurement_System.Forms
                 return;
             }
 
+            Dictionary<string, string> configs = new Dictionary<string, string>
+            {
+                { "MIN_DELTA", minDelta.ToString() },
+                { "FALL_THRESHOLD", fallTreshold.ToString() }
+            };
+
             if (parameterBox.Enabled) 
-                GlobalData.SetParameters(minDelta, fallTreshold);
+                Configuration.SetParameters(configs);
 
             CloseForm();
         }

@@ -5,7 +5,6 @@ String buffer = "";
 bool inFrame = false;
 
 bool measure = false;
-String currentId = "";
 
 unsigned long lastMeasure = 0;
 const unsigned long interval = 10;
@@ -14,7 +13,7 @@ int lastValue = -1;
 int fallingCount = 0;
 
 int FALL_THRESHOLD = 3;   // ennyi egymás utáni csökkenés kell
-int MIN_DELTA = 2;        // zajszűrés (ADC jitter ellen)
+int MIN_DELTA = 2;        // zajszűrés
 
 // ================= CHECKSUM =================
 byte calcChecksum(const String &s) {
@@ -40,7 +39,6 @@ void setup() {
 // ================= LOOP =================
 void loop() {
   handleSerial();   // mindig fusson
-  handleMeasure();  // nem blokkoló mérés
 }
 
 // ================= SERIAL PARSER =================
@@ -59,7 +57,7 @@ void handleSerial() {
     else if (inFrame) {
       buffer += c;
     }
-    // ha nem vagyunk frame-ben, eldobjuk → resync
+    // ha nem vagyunk frame-ben, eldobjuk -> resync
   }
 }
 
@@ -96,14 +94,30 @@ void processCommand(String id, String cmd, String data) {
 
   else if (cmd == "START_MEASURE") {
     measure = true;
-    currentId = id;
-
+    fallingCount = 0;
+    lastValue = -1;
     lastMeasure = millis(); // reset timing
-    sendMessage(id, "ACK", "STARTED");
+    sendMessage(id, "ACK", String(fallingCount));
+  }
+
+  else if (cmd == "GET_MEASURE_DATA") {
+    if (measure) {
+      int value = handleMeasure();
+      if (value != -1001) {
+        sendMessage(id, "MEASURE_DATA", String(value));
+      }
+      else {
+        sendMessage(id, "STOP_MEASURE", "FALL_DETECTED");
+        measure = false;
+      }
+    }
+    else {
+      sendMessage(id, "ERR", "Measure is not started yet.");
+    }
   }
 
   else if (cmd == "STOP_MEASURE") {
-    measure = false;
+    // ide kell majd a measure leállítás
     sendMessage(id, "ACK", "STOPPED");
   }
 
@@ -121,9 +135,7 @@ void processCommand(String id, String cmd, String data) {
 }
 
 // ================= MEASURE LOOP =================
-void handleMeasure() {
-  if (!measure) return;
-
+int handleMeasure() {
   unsigned long now = millis();
 
   if (now - lastMeasure >= interval) {
@@ -145,13 +157,15 @@ void handleMeasure() {
     // ===== Stop feltétel =====
     if (fallingCount >= FALL_THRESHOLD) {
       measure = false;
-      sendMessage(currentId, "STOP_MEASURE", "FALL_DETECTED");
-      return;
+      return -1001;
     }
-
-    // ===== Normál küldés =====
-    sendMessage(currentId, "MEASURE", String(value));
+    return value;
   }
+  return -1;
+}
+
+void stopMeasureSequent() {
+  // ide kell majd a measure leállítási rész
 }
 
 // ================= SEND =================
@@ -169,7 +183,7 @@ void sendMessage(String id, String command, String data) {
 
 // ================= PARAM =================
 void setParameter(String id, String data) {
-  // 1. Megkeressük a pontosvesszőt
+  // Megkeressük a pontosvesszőt
   int p1 = data.indexOf(';');
   
   // HA NINCS pontosvessző, azonnal hibával térünk vissza
@@ -178,20 +192,20 @@ void setParameter(String id, String data) {
     return;
   }
 
-  // 2. Szétvágjuk a stringet
+  // Szétvágjuk a stringet
   String param = data.substring(0, p1);
   String value = data.substring(p1 + 1);
 
-  // 3. Levágjuk a láthatatlan újsor (\n, \r) és szóköz karaktereket
+  // Levágjuk a láthatatlan újsor (\n, \r) és szóköz karaktereket
   param.trim();
   value.trim();
 
   // 4. Paraméterek vizsgálata
-  if (param == "MD") {
+  if (param == "MIN_DELTA") {
     MIN_DELTA = value.toInt();
     sendMessage(id, "ACK", String(MIN_DELTA));
   }
-  else if (param == "FT") {
+  else if (param == "FALL_THRESHOLD") {
     FALL_THRESHOLD = value.toInt();
     sendMessage(id, "ACK", String(FALL_THRESHOLD));
   }

@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Threading;
-using System.Collections.Generic;
-
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
-using System.Drawing;
-
 using Vascular_Pressure_Measurement_System.Forms;
 using Vascular_Pressure_Measurement_System.Utils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Vascular_Pressure_Measurement_System
 {
@@ -212,24 +211,31 @@ namespace Vascular_Pressure_Measurement_System
         private void LoadButton_Click(object sender, EventArgs e)
         {
             string[] data = null;
-            using (OpenFileDialog dialog = new OpenFileDialog())
+            OpenFileDialog dialog = new OpenFileDialog()
             {
-                dialog.Title = "Load CSV file";
-                dialog.Filter = "CSV file (*.csv)|*.csv";
-                dialog.DefaultExt = "csv";
-                dialog.AddExtension = true;
+                Title = "Load CSV file",
+                Filter = "CSV file (*.csv)|*.csv",
+                DefaultExt = "csv",
+                AddExtension = true
+            };
 
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    string path = dialog.FileName;
+            DialogResult loadCsvResult = dialog.ShowDialog();
 
-                    data = File.ReadAllLines(path);
-                }
+
+            if (loadCsvResult == DialogResult.OK)
+            {
+                string path = dialog.FileName;
+
+                data = File.ReadAllLines(path);
+            }
+            else if (loadCsvResult == DialogResult.Cancel)
+            {
+                return;
             }
 
             if (data == null || data.Length < 2)
             {
-                MessageBox.Show("No data to load!", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("An error occurred during selection.", "Load CSV", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -290,9 +296,9 @@ namespace Vascular_Pressure_Measurement_System
                     }
                 }
 
-                //AnalysisForm analysisForm = new AnalysisForm(selectedPoints, derivativeX, derivatives);
+                AnalysisForm analysisForm = new AnalysisForm(selectedPoints, derivativeX, derivatives);
 
-                //analysisForm.Show();
+                analysisForm.Show();
             }
         }
 
