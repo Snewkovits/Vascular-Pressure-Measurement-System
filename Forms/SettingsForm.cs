@@ -15,7 +15,7 @@ namespace Vascular_Pressure_Measurement_System.Forms
 
             if (Connection.isConnected)
             {
-                Dictionary<string, string> configs = Configuration.ReadConfiguration();
+                Dictionary<string, string> configs = Configuration.Hardware.ReadConfiguration();
 
                 parameterMinDelta.Text = configs["MIN_DELTA"];
                 parameterFallTreshold.Text = configs["FALL_THRESHOLD"];
@@ -55,7 +55,7 @@ namespace Vascular_Pressure_Measurement_System.Forms
             };
 
             if (parameterBox.Enabled) 
-                Configuration.SetParameters(configs);
+                Configuration.Hardware.SetParameters(configs);
 
             CloseForm();
         }

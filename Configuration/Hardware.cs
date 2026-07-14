@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Vascular_Pressure_Measurement_System.Utils;
 using System.IO;
+using System.Diagnostics;
 
-namespace Vascular_Pressure_Measurement_System.Utils
+namespace Vascular_Pressure_Measurement_System.Configuration
 {
-    internal class Configuration
+    internal class Hardware
     {
         static string localPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         static string appFolder = Path.Combine(localPath, "Vascular_Pressure_Measurement_System");

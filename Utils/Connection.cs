@@ -67,6 +67,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
             new Thread(() =>
             {
                 serialPort = null;
+                bool isConfigSent = false;
                 while (!stopConnection)
                 {
                     // Lockolunk, hogy amíg a kapcsolatot ellenőrizzük/javítjuk, 
@@ -76,14 +77,6 @@ namespace Vascular_Pressure_Measurement_System.Utils
                         if (serialPort == null || !serialPort.IsOpen)
                         {
                             serialPort = GetSerialPort();
-                            try
-                            {
-                                Configuration.SetParameters();
-                            }
-                            catch (Exception ex)
-                            {
-                                Trace.WriteTrace(ex.Message);
-                            }
 
                             if (serialPort != null)
                             {
@@ -91,17 +84,20 @@ namespace Vascular_Pressure_Measurement_System.Utils
                                 {
                                     serialPort.Open();
                                     isConnected = true;
+                                    isConfigSent = false;
                                     GlobalData.SerialConnectionStatus = true;
                                 }
                                 catch
                                 {
                                     isConnected = false;
+                                    isConfigSent = false;
                                     GlobalData.SerialConnectionStatus = false;
                                 }
                             }
                             else
                             {
                                 isConnected = false;
+                                isConfigSent = false;
                                 GlobalData.SerialConnectionStatus = false;
                             }
                         }
@@ -111,16 +107,30 @@ namespace Vascular_Pressure_Measurement_System.Utils
                             {
                                 if (SendMessage(CommandType.PING, "")[0] == CommandType.PONG)
                                 {
+                                    if (!isConfigSent)
+                                    {
+                                        try
+                                        {
+                                            Configuration.Hardware.SetParameters();
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Trace.WriteTrace(ex.Message);
+                                        }
+                                        isConfigSent = true;
+                                    }
                                     isConnected = true;
                                     GlobalData.SerialConnectionStatus = true;
                                 }
                                 else
                                 {
+                                    isConfigSent = false;
                                     CloseConnection();
                                 }
                             }
                             catch (Exception)
                             {
+                                isConfigSent = false;
                                 CloseConnection();
                             }
                         }

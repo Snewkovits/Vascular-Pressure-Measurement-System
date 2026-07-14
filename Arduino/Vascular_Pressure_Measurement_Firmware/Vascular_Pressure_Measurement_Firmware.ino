@@ -215,7 +215,7 @@ void setParameter(String id, String data) {
 }
 
 void getParameter(String id, String data) {
-  if (data == "MD") sendMessage(id, "ACK", String(MIN_DELTA));
-  else if (data == "FT") sendMessage(id, "ACK", String(FALL_THRESHOLD));
+  if (data == "MIN_DELTA") sendMessage(id, "ACK", String(MIN_DELTA));
+  else if (data == "FALL_THRESHOLD") sendMessage(id, "ACK", String(FALL_THRESHOLD));
   else sendMessage(id, "ERR", "UNKNOWN PARAMETER");
 }
