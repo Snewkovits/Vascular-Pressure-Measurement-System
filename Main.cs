@@ -7,7 +7,6 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using Vascular_Pressure_Measurement_System.Forms;
 using Vascular_Pressure_Measurement_System.Utils;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Vascular_Pressure_Measurement_System
 {
@@ -18,6 +17,8 @@ namespace Vascular_Pressure_Measurement_System
         int counter = 0;
         // Chart variables
         System.Windows.Forms.Timer chartUpdateTimer;
+
+        bool connectionFaildOnDisplayed = false;
 
         public Main()
         {
@@ -109,7 +110,13 @@ namespace Vascular_Pressure_Measurement_System
                         this.Enabled = true;
                     }
                 }));
-                new Thread(() => MessageBox.Show("No connection to the device!", "CONNECTION ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error)).Start();
+
+                if (!connectionFaildOnDisplayed)
+                new Thread(() => {
+                    connectionFaildOnDisplayed = true;
+                    DialogResult result = MessageBox.Show("No connection to the device!", "CONNECTION ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (result == DialogResult.OK || result == DialogResult.Abort) connectionFaildOnDisplayed = false;
+                }).Start();
             }
         }
 
