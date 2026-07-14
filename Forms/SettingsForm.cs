@@ -9,8 +9,6 @@ namespace Vascular_Pressure_Measurement_System.Forms
     public partial class SettingsForm : Form
     {
 
-        int prev_minDelta, prev_fallTreshold;
-
         public SettingsForm()
         {
             InitializeComponent();
@@ -21,13 +19,10 @@ namespace Vascular_Pressure_Measurement_System.Forms
 
                 parameterMinDelta.Text = configs["MIN_DELTA"];
                 parameterFallTreshold.Text = configs["FALL_THRESHOLD"];
-
             }
             else
             {
                 parameterBox.Enabled = false;
-                prev_minDelta = int.TryParse(parameterMinDelta.Text, out var pd) ? pd : -1;
-                prev_fallTreshold = int.TryParse(parameterFallTreshold.Text, out var pf) ? pf : -1;
             }
         }
 

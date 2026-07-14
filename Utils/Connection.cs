@@ -76,7 +76,14 @@ namespace Vascular_Pressure_Measurement_System.Utils
                         if (serialPort == null || !serialPort.IsOpen)
                         {
                             serialPort = GetSerialPort();
-                            Configuration.SetParameters();
+                            try
+                            {
+                                Configuration.SetParameters();
+                            }
+                            catch (Exception ex)
+                            {
+                                Trace.WriteTrace(ex.Message);
+                            }
 
                             if (serialPort != null)
                             {

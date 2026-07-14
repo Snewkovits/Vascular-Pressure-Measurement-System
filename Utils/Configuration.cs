@@ -8,14 +8,14 @@ namespace Vascular_Pressure_Measurement_System.Utils
     {
         static string localPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         static string appFolder = Path.Combine(localPath, "Vascular_Pressure_Measurement_System");
-        static string configureFile = Path.Combine(appFolder, "config.csv");
+        static string configureFile = Path.Combine(appFolder, "hardware_configuration.csv");
 
-        public static void SetParameters(Dictionary<string, string> configs = null)
+        public static void SetParameters(Dictionary<string, string> configs = null, bool writeDefault = false)
         {
             if (configs == null)
                 configs = new Dictionary<string, string>();
 
-            if (!Directory.Exists(appFolder) || !File.Exists(configureFile))
+            if (!Directory.Exists(appFolder) || !File.Exists(configureFile) || writeDefault)
             {
                 Directory.CreateDirectory(appFolder);
                 configs["MIN_DELTA"] = "2";
@@ -84,6 +84,19 @@ namespace Vascular_Pressure_Measurement_System.Utils
 
                         result[key] = value;
                     }
+                }
+
+                double minDeltaVal;
+                double fallThresholdVal;
+
+                if (result.Count <= 0 ||
+                    !result.TryGetValue("MIN_DELTA", out string minDeltaStr) ||
+                    !double.TryParse(minDeltaStr, out minDeltaVal) || minDeltaVal < 0 ||
+                    !result.TryGetValue("FALL_THRESHOLD", out string fallThresholdStr) ||
+                    !double.TryParse(fallThresholdStr, out fallThresholdVal) || fallThresholdVal < 0)
+                {
+                    SetParameters(null, true);
+                    result = ReadConfiguration();
                 }
             }
 
