@@ -48,6 +48,8 @@
             // 
             // chartDerivative
             // 
+            chartArea1.CursorX.Interval = 0D;
+            chartArea1.CursorX.IntervalType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
             chartArea1.Name = "ChartArea1";
             this.chartDerivative.ChartAreas.Add(chartArea1);
             legend1.Name = "Legend1";
@@ -58,11 +60,11 @@
             series1.ChartArea = "ChartArea1";
             series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
             series1.Legend = "Legend1";
-            series1.Name = "Original";
+            series1.Name = "Derivated";
             series2.ChartArea = "ChartArea1";
             series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Spline;
             series2.Legend = "Legend1";
-            series2.Name = "Derivated";
+            series2.Name = "Original";
             this.chartDerivative.Series.Add(series1);
             this.chartDerivative.Series.Add(series2);
             this.chartDerivative.Size = new System.Drawing.Size(350, 369);

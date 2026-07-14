@@ -55,6 +55,8 @@
             chartArea1.AxisY.ScaleView.Zoomable = false;
             chartArea1.AxisY.TitleForeColor = System.Drawing.Color.White;
             chartArea1.AxisY2.LabelStyle.ForeColor = System.Drawing.Color.White;
+            chartArea1.CursorX.Interval = 0D;
+            chartArea1.CursorX.IntervalType = System.Windows.Forms.DataVisualization.Charting.DateTimeIntervalType.Number;
             chartArea1.CursorX.IsUserEnabled = true;
             chartArea1.CursorX.IsUserSelectionEnabled = true;
             chartArea1.CursorY.IsUserEnabled = true;

@@ -60,6 +60,7 @@ namespace Vascular_Pressure_Measurement_System
 
         private void Main_SizeChanged(object sender, EventArgs e)
         {
+            if (this.ClientSize.Width - Chart.Left - 10 < 0 || this.ClientSize.Height - 20 < 0) return;
             Chart.Size = new System.Drawing.Size(this.ClientSize.Width - Chart.Left - 10, this.ClientSize.Height - 20);
             RefreshButtonPosition();
         }
