@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
@@ -13,6 +14,7 @@ namespace Vascular_Pressure_Measurement_System
     public partial class Main : Form
     {
         SettingsForm settingsForm = null;
+        TestPad testPad = null;
         Measure measure = null;
         int counter = 0;
         // Chart variables
@@ -31,6 +33,8 @@ namespace Vascular_Pressure_Measurement_System
             DisableButton(ForceStopButton);
             DisableButton(StartMeasuring);
             DisableButton(SaveButton);
+
+            KeyPreview = true;
         }
 
         #region UI Manipulations
@@ -152,6 +156,12 @@ namespace Vascular_Pressure_Measurement_System
         private void StartMeasuring_Click(object sender, EventArgs e) // Amikor a StartMeasuring gombra kattintunk, elindítjuk a mérést, és beállítjuk a Chart-ot, hogy megjelenítse a mért adatokat. Először is, töröljük a Chart-on lévő pontokat, hogy tiszta legyen a megjelenítés. Ezután engedélyezzük a ForceStopButton-t, hogy lehetőséget adjunk a felhasználónak a mérés leállítására, és letiltjuk a StartMeasuring gombot, hogy ne lehessen újra elindítani a mérést, amíg az már fut. Végül beállítjuk a chartUpdateTimer-t, hogy 10 ms-onként frissítse a Chart-ot a Measure osztály bufferéből származó adatokkal, és elindítjuk a timer-t.
         {
             if (measure.isRunning()) return;
+
+            if (testPad != null)
+            {
+                testPad.Close();
+                testPad = null;
+            }
 
             Chart.Series[0].Points.Clear();
 
@@ -313,6 +323,28 @@ namespace Vascular_Pressure_Measurement_System
         private void AboutButton_Click(object sender, EventArgs e)
         {
             new AboutForm().ShowDialog();
+        }
+
+        private bool isCtrlPressed = false;
+        private void Main_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ControlKey)
+                isCtrlPressed = true;
+
+            if (isCtrlPressed && e.KeyCode == Keys.S && SaveButton.Enabled)
+                SaveButton_Click(sender, e);
+
+            if (isCtrlPressed && e.KeyCode == Keys.Q && testPad == null && !measure.isRunning())
+            {
+                testPad = new TestPad();
+                testPad.Show();
+            }
+        }
+
+        private void Main_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.ControlKey)
+                isCtrlPressed = false;
         }
     }
 }
