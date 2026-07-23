@@ -138,6 +138,10 @@ void processCommand(String id, String cmd, String data) {
     setInputOutput(id, data);
   }
 
+  else if (cmd == "GET_IO") {
+    getInputOutput(id, data);
+  }
+
   else {
     sendMessage(id, "ERR", "CMD");
   }
@@ -246,4 +250,21 @@ void setInputOutput(String id, String data) {
   digitalWrite(param.substring(1, param.length()).toInt(), value == "HIGH" ? HIGH : LOW);
 
   sendMessage(id, "ACK", param + ";" + value);
+}
+
+void getInputOutput(String id, String data) {
+  String type = data.substring(0, 1);
+  type.trim();
+  
+  int pinNum = data.substring(1).toInt();
+  String value = "";
+
+  if (type == "D") {
+    value = String(digitalRead(pinNum));
+  } 
+  else if (type == "A") {
+    value = String(analogRead(A0 + pinNum));
+  }
+
+  sendMessage(id, "IO_DATA", value);
 }
