@@ -3,8 +3,11 @@
 
 String buffer = "";
 bool inFrame = false;
-
 bool measure = false;
+
+// ===== DEBUG =====
+bool debug = false;
+// =================
 
 unsigned long lastMeasure = 0;
 const unsigned long interval = 10;
@@ -14,6 +17,8 @@ int fallingCount = 0;
 
 int FALL_THRESHOLD = 3;   // ennyi egymás utáni csökkenés kell
 int MIN_DELTA = 2;        // zajszűrés
+
+int DEBUG_PIN = 13;
 
 // ================= CHECKSUM =================
 byte calcChecksum(const String &s) {
@@ -28,17 +33,16 @@ byte calcChecksum(const String &s) {
 void setup() {
   Serial.begin(1000000);
 
-  for (int pin = 2; pin <= 13; pin++) {
-    pinMode(pin, INPUT);
+  for (int pin = 2; pin <= 11; pin++) {
+    pinMode(pin, OUTPUT);
   }
-
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
+  pinMode(DEBUG_PIN, INPUT_PULLUP);
 }
 
 // ================= LOOP =================
 void loop() {
   handleSerial();   // mindig fusson
+  debug = digitalRead(DEBUG_PIN) == LOW;
 }
 
 // ================= SERIAL PARSER =================
@@ -77,7 +81,8 @@ void processMessage(String msg) {
   byte chkCalc = calcChecksum(msg.substring(0, p3));
   byte chkRecv = (byte) strtol(chkStr.c_str(), NULL, 16);
 
-  if (chkCalc != chkRecv) {
+
+  if (!debug && chkCalc != chkRecv) {
     sendMessage(id, "ERR", "CHK");
     return;
   }
@@ -127,6 +132,10 @@ void processCommand(String id, String cmd, String data) {
 
   else if (cmd == "GET_PARAM") {
     getParameter(id, data);
+  }
+
+  else if (cmd == "SET_IO") {
+    setInputOutput(id, data);
   }
 
   else {
@@ -218,4 +227,23 @@ void getParameter(String id, String data) {
   if (data == "MIN_DELTA") sendMessage(id, "ACK", String(MIN_DELTA));
   else if (data == "FALL_THRESHOLD") sendMessage(id, "ACK", String(FALL_THRESHOLD));
   else sendMessage(id, "ERR", "UNKNOWN PARAMETER");
+}
+
+void setInputOutput(String id, String data) {
+  int p1 = data.indexOf(';');
+    
+  if (p1 == -1) {
+    sendMessage(id, "ERR", "INVALID FORMAT");
+    return;
+  }
+
+  String param = data.substring(0, p1);
+  String value = data.substring(p1 + 1);
+
+  param.trim();
+  value.trim();
+
+  digitalWrite(param.substring(1, param.length()).toInt(), value == "HIGH" ? HIGH : LOW);
+
+  sendMessage(id, "ACK", param + ";" + value);
 }
