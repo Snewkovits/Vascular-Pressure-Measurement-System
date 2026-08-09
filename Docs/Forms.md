@@ -3,7 +3,7 @@
 Ez a fájl a `Vascular_Pressure_Measurement_System.Forms` névtér négy "kiegészítő" ablakát
 dokumentálja (a `Main` főablakot lásd külön: [`03-Main-Foablak.md`](./03-Main-Foablak.md)).
 
-⬅ Vissza az [áttekintéshez](./00-README.md) · Előző: [Main főablak](./03-Main-Foablak.md)
+⬅ Vissza az [áttekintéshez](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/README.md) · Előző: [Main főablak](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Main_form.md)
 
 > **Közös mintázat mind a négy ablakban:** mindegyik `KeyPreview = true`-t állít be a
 > konstruktorban, nyomon követi a `Ctrl` billentyű állapotát egy `isCtrlPressed` mezővel
