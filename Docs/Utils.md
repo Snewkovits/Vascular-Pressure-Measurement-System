@@ -316,4 +316,4 @@ hogy a UI-szálat blokkolná.
 
 ---
 
-⬅ Vissza az [áttekintéshez](./00-README.md) · Következő: [Configuration névtér](./02-Configuration-Hardver-Beallitasok.md)
+⬅ Vissza az [áttekintéshez](./00-README.md) · Következő: [Configuration névtér](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Configuration.md)
