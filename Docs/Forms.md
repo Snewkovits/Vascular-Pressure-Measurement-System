@@ -273,4 +273,4 @@ Az ablak mérete rögzített (`MinimumSize == MaximumSize`), tehát nem átmére
 
 ---
 
-⬅ Vissza az [áttekintéshez](./00-README.md) · Előző: [Main főablak](./03-Main-Foablak.md)
+⬅ Vissza az [áttekintéshez](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/README.md) · Előző: [Main főablak](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Main_form.md)
