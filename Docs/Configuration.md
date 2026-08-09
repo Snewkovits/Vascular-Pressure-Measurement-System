@@ -139,4 +139,4 @@ kód.
 
 ---
 
-⬅ Vissza az [áttekintéshez](./00-README.md) · Előző: [Utils névtér](./01-Utils-Kommunikacio-Meres.md) · Következő: [Main főablak](./03-Main-Foablak.md)
+⬅ Vissza az [áttekintéshez](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/README.md) · Előző: [Utils névtér](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Utils.md) · Következő: [Main főablak](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Main_form.md)
