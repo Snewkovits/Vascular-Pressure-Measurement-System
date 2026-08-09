@@ -221,7 +221,7 @@ eszköz-kezdeményezésű (aszinkron) üzenetek fogadására készült elő.
 ### `public static class CommandType`
 
 Névtér-szerű konstansgyűjtemény a protokoll parancsszavaihoz (lásd táblázat a
-[README-ben](./README.md#32-parancstípusok-connectioncommandtype)). Ezeket használja
+README-ben Parancstípusok connectioncommandtype). Ezeket használja
 minden hívó a "mágikus string" elgépelések elkerülésére (bár néhány helyen, pl.
 `Measure.Start()`-ban, a kód közvetlenül `"START_MEASURE"` string literált használ a
 konstans helyett – funkcionálisan ekvivalens).
