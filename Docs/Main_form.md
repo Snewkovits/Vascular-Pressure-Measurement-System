@@ -230,4 +230,4 @@ Amikor a `Ctrl` billentyűt felengedik, `isCtrlPressed = false`.
 
 ---
 
-⬅ Vissza az [áttekintéshez](./00-README.md) · Előző: [Configuration névtér](./02-Configuration-Hardver-Beallitasok.md) · Következő: [További formok](./04-Tovabbi-Formok.md)
+⬅ Vissza az [áttekintéshez](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/README.md) · Előző: [Configuration névtér](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Configuration.md) · Következő: [További formok](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Forms.md)
