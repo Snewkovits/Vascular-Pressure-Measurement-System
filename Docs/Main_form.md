@@ -199,7 +199,7 @@ funkciót.
    megjeleníti (`Show()` – nem modális).
 
 Az `AnalysisForm` maga végzi a statisztikák (átlag, max/min meredekség és helyük)
-kiszámítását – lásd [`04-Tovabbi-Formok.md`](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Forms.md).
+kiszámítását – lásd [`Forms`](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Forms.md).
 
 ## 9. About ablak
 
