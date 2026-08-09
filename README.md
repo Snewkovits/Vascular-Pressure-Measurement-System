@@ -88,7 +88,7 @@ egy aktív mérés) sose írjon/olvasson egyszerre a porton:
 > zárolva tartja a soros portot, így a háttérben futó PING-ellenőrző szál eközben nem
 > tud beavatkozni – ez szándékos, hogy a mérési adatfolyamot ne szakítsa meg egy PING.
 
-Részletek: [`01-Utils-Kommunikacio-Meres.md`](./01-Utils-Kommunikacio-Meres.md).
+Részletek: [`Utils`](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Utils.md).
 
 ---
 
