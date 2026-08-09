@@ -144,7 +144,7 @@ egy `["ERR", "<üzenet>"]` tömböt ad vissza. Három egymást követő sikertel
 állítja az állapotot, amit a `GlobalData.SerialConnectionStatusChanged` esemény továbbít a
 felületnek. A háttérben futó `ContinousTest` szál ezután újra elkezdi keresni az eszközt.
 
-Részletek: [`01-Utils-Kommunikacio-Meres.md`](./01-Utils-Kommunikacio-Meres.md).
+Részletek: [`Utils`](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Utils.md).
 
 ---
 
