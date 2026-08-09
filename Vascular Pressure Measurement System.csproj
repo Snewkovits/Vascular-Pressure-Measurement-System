@@ -111,7 +111,10 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Arduino\Vascular_Pressure_Measurement_Firmware.ino" />
-    <None Include="Docs\Connection.md" />
+    <None Include="Docs\Configuration.md" />
+    <None Include="Docs\Forms.md" />
+    <None Include="Docs\Main_form.md" />
+    <None Include="Docs\Utils.md" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
