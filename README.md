@@ -1,76 +1,230 @@
-<div align="center">
-  <h1>Vascular Pressure Measurment System<br>VRP</h1>
-  <p><strong>Valós Idejű Adatgyűjtő és Elemző Rendszer</strong></p>
-  <p><em>Diplomamunka / Szakdolgozat Szoftverkomponens</em></p>
-</div>
+# Vascular Pressure Measurement System – Projektdokumentáció
+
+> C# Windows Forms alkalmazás vaszkuláris (ér-) nyomás mérésére, egy soros porton (USB/UART)
+> kapcsolódó mikrovezérlős (Arduino-szerű) hardver segítségével.
+
+Ez a dokumentáció a teljes forráskódot végigveszi: bemutatja az alkalmazás felépítését,
+a soros kommunikációs protokollt, majd fájlonként/osztályonként, **metódus szinten** leírja,
+hogy az egyes részek mit és hogyan csinálnak.
+
+## Tartalomjegyzék / a dokumentáció fájljai
+
+| Fájl | Tartalom |
+|---|---|
+| `README.md` | Ez a fájl – áttekintés, architektúra, kommunikációs protokoll, gyors referenciák |
+| `Utils.md` | `Utils` névtér: `Connection`, `Measure`, `GlobalData`, `Trace` – a mérőrendszer "motorja" |
+| `Configuration.md` | `Configuration` névtér: `Hardware`, `Application` – paraméterek kezelése |
+| `Main_form.md` | A `Main` főablak – a program szíve, a felhasználói felület vezérlése |
+| `Forms.md` | `SettingsForm`, `Diagnostics`, `AnalysisForm`, `AboutForm` – kiegészítő ablakok |
 
 ---
 
-A **Venduino** egy komplex mérnök-informatikai célfeladat megvalósítására létrehozott asztali kliensalkalmazás. A rendszer egy egyedi fejlesztésű mikrokontrolleres mérőeszköz (Arduino) és egy .NET alapú vizualizációs szoftver (Windows Forms) szoros együttműködésére épül. Elsődleges feladata az analóg szenzorbemenetek nagy sebességű, valós idejű mintavételezése, a hibatűrő soros adatátvitel, a szálbiztos pufferelés, valamint a gyűjtött adathalmaz utólagos matematikai analízise.
+## 1. Mit csinál az alkalmazás?
 
-A szoftverarchitektúra az **eseményvezérelt programszerkezet**, a **többszálú végrehajtás** (Multithreading) és a **numerikus módszerek** gyakorlati alkalmazását hivatott demonstrálni.
+A program egy asztali (WinForms) kliens, amely:
 
-A teljes dokumentáció a Docs mappában található (VIP)
+1. **automatikusan felkutatja és fenntartja a kapcsolatot** egy soros porton csatlakoztatott
+   mérőeszközzel (folyamatos "PING/PONG" ellenőrzéssel, háttérszálon),
+2. **valós idejű nyomásgörbét** jelenít meg (`Chart` vezérlő) mérés közben,
+3. a mért adatsort **CSV fájlba menti**, illetve korábbi mérést **CSV-ből visszatölt**,
+4. a felhasználó a görbén **egérrel kijelölhet egy szakaszt**, amelyre az alkalmazás
+   **numerikus deriváltat** (meredekséget) számol, és egy külön ablakban (`AnalysisForm`)
+   statisztikákat (átlag, max. emelkedés/esés, ezek helye) mutat,
+5. lehetővé teszi a mérési **hardverparaméterek** (`MIN_DELTA`, `FALL_THRESHOLD`) módosítását
+   (`SettingsForm`), amelyeket egyszerre ment fájlba és tölt fel az eszközre,
+6. rejlett **diagnosztikai/teszt módot** biztosít (`Diagnostics` ablak, `Ctrl+Shift+D`),
+   amelyben az eszköz digitális/analóg lábainak (pin) állapota közvetlenül vizsgálható
+   és (kimenet esetén) állítható.
 
-## Rendszerarchitektúra és Szoftverstruktúra
+## 2. Architektúra
 
-Az alkalmazás moduláris felépítésű, követve a felelősségi körök elválasztásának (*Separation of Concerns*) elvét. A forráskód az alábbi objektumorientált struktúrára tagozódik:
+### 2.1 Névterek és rétegek
 
-```text
-├── Main.cs / Main.Designer.cs          # Főprogram és UI
-├── Forms/
-│   ├── SettingsForm.cs / .Designer.cs  # Konfigurációs felület
-│   └── AnalysisForm.cs / .Designer.cs  # Matematikai modul
-└── Utils/
-    ├── Connection.cs                   # Adatkapcsolati réteg
-    ├── Measure.cs                      # Mérőszál
-    └── GlobalData.cs                   # Globális állapot és perzisztencia
+```
+Vascular_Pressure_Measurement_System                (gyökér – Main form)
+├── .Forms                                           (ablakok / UI)
+│   ├── SettingsForm      – hardverparaméterek szerkesztése
+│   ├── Diagnostics        – I/O lábak élő tesztelése
+│   ├── AnalysisForm        – kijelölt szakasz derivált-elemzése
+│   └── AboutForm            – verzióinfó
+├── .Utils                                          (motor / infrastruktúra)
+│   ├── Connection          – soros port kezelése, üzenetprotokoll, automatikus újracsatlakozás
+│   ├── Measure              – mérési ciklus külön szálon, adat puffer
+│   ├── GlobalData             – globális állapot + esemény (kapcsolat státusza)
+│   └── Trace                    – egyszerű fájl alapú naplózás
+└── .Configuration                                  (beállítások)
+    ├── Hardware              – hardverparaméterek fájlba/eszközre írása-olvasása
+    └── Application            – jelenleg üres, jövőbeli app-szintű beállításokhoz (TODO váz)
 ```
 
-## Főbb Mérnöki Megoldások és Funkciók
-1. Robusztus, Keret-alapú Soros Kommunikáció (Connection.cs)
+A `Main` form nincs külön névtérben (`Vascular_Pressure_Measurement_System` gyökér névtér),
+minden más ablak a `Forms` alnévtérben van.
 
-A mikrokontroller és a PC közötti adatcsere nem nyers adatfolyamként, hanem egyedi tervezésű, szigorúan validált üzenetkeretekben történik a hibás csomagok kiszűrésére:
-```text
-Formátum: < ÜzenetID | Parancs | Adat | Checksum >
+### 2.2 Felelősségi rétegek
+
+| Réteg | Feladat | Fő osztályok |
+|---|---|---|
+| **UI (Forms)** | Megjelenítés, felhasználói interakció, gombok/billentyűparancsok | `Main`, `SettingsForm`, `Diagnostics`, `AnalysisForm`, `AboutForm` |
+| **Üzleti logika / mérés** | Mérési ciklus vezérlése, adatgyűjtés | `Measure` |
+| **Kommunikáció** | Soros port keresése, nyitása, üzenetváltás, hibakezelés, automatikus reconnect | `Connection` |
+| **Konfiguráció** | Hardverparaméterek perzisztálása (fájl + eszköz) | `Hardware`, `Application` |
+| **Infrastruktúra** | Globális, szálbiztos állapot-megosztás, naplózás | `GlobalData`, `Trace` |
+
+### 2.3 Szálmodell (fontos!)
+
+Az alkalmazás tudatosan több háttérszálat használ, mindig a **UI-szálra visszaütemezve**
+(`Control.Invoke`) frissíti a felületet. A soros porthoz való hozzáférést egyetlen közös
+zárral (`Connection._serialPortLock`) védik, hogy két szál (pl. a folyamatos PING-teszt és
+egy aktív mérés) sose írjon/olvasson egyszerre a porton:
+
+| Szál | Indítja | Feladat | Zár |
+|---|---|---|---|
+| Kapcsolat-figyelő szál | `Connection.ContinousTest()` (a `Main` konstruktorában) | Port keresés, PING/PONG ellenőrzés 100 ms-onként, automatikus reconnect | `_serialPortLock` |
+| Mérési szál | `Measure.Start()` | `GET_MEASURE_DATA` küldése ciklusban, adat pufferelése | `_serialPortLock` (a **teljes mérés idejére** lefoglalva!) |
+| Diagnosztika poll szál | `Diagnostics.RefreshMembers()` | I/O lábak folyamatos lekérdezése | `_serialPortLock` (a `SendMessage` belső zárján keresztül) |
+| UI-értesítő szálak | pl. `Main.GlobalData_SerialConnectionStatus` hiba ága | `MessageBox.Show` megjelenítése kapcsolatvesztéskor | – |
+
+> **Fontos következmény:** amíg egy mérés fut, a `Measure` a teljes mérés idejére
+> zárolva tartja a soros portot, így a háttérben futó PING-ellenőrző szál eközben nem
+> tud beavatkozni – ez szándékos, hogy a mérési adatfolyamot ne szakítsa meg egy PING.
+
+Részletek: [`01-Utils-Kommunikacio-Meres.md`](./01-Utils-Kommunikacio-Meres.md).
+
+---
+
+## 3. Soros kommunikációs protokoll
+
+A PC és az eszköz **szöveges, keret alapú** protokollal kommunikál a `Connection` osztályon
+keresztül.
+
+**Port paraméterek:** 1 000 000 baud, 8 adatbit, nincs paritás, 1 stop bit, ASCII kódolás,
+100 ms olvasási/írási időtúllépés.
+
+### 3.1 Keretformátum
+
 ```
-* Átviteli biztonság: Minden beérkező keret Checksum ellenőrzésen esik át (CalculateChecksum), kivédve a zajos soros vonal okozta adatkorrupciót.
+Küldött üzenet:  <ID|CMD|DATA|CHK>
+Válasz üzenet:   <ID|CMD|DATA|CHK>
+```
 
-* Életjel-ellenőrzés (Keep-Alive): A háttérben egy folyamatos, aszinkron PING-PONG mechanizmus fut. Ha az eszköz egymás után 3 alkalommal hibás választ ad vagy nem válaszol (Timeout), a szoftver automatikusan lezárja a portot és jelzi a kapcsolat megszakadását, megvédve a rendszert a kritikus futásidejű hibáktól.
+- **ID** – növekvő, egész szám számláló (minden `SendMessage`-hívás eggyel növeli); a válasznak
+  ugyanezt az ID-t kell visszaadnia, különben `"ID mismatch"` hibát kapunk.
+- **CMD** – a parancs neve (kérésnél a küldött parancs, válasznál pl. `ACK`, `PONG`,
+  `MEASURE_DATA`, `STOP_MEASURE`, vagy a lekérdezett érték szerinti visszajelzés).
+- **DATA** – a parancshoz tartozó adat (lehet üres string is).
+- **CHK** – ellenőrzőösszeg: az `ID|CMD|DATA` payload karaktereinek **XOR**-a, 2 jegyű
+  hexadecimális formában.
 
-2. Többszálú Adatfeldolgozás és Szálbiztosság (Measure.cs)
+Egy tipikus üzenetváltás pl. mérés közben:
 
-A nagy sebességű mintavételezés során kritikus követelmény, hogy a felhasználói felület (UI) teljesen reszponzív maradjon.
+```
+PC  -> Eszköz:  <42|GET_MEASURE_DATA||2A>
+Eszköz -> PC:   <42|MEASURE_DATA|118.4|7F>
+```
 
-* Producer-Consumer mintázat: A mérés indításakor a szoftver egy dedikált háttérszálat (Thread) nyit. Ez a mérőszál folyamatosan olvassa a soros portot és pakolja az adatokat egy elsőbbségi sorba (Queue).
+### 3.2 Parancstípusok (`Connection.CommandType`)
 
-* Kölcsönös kizárás: A kritikus szakaszok védelmét és a szálbiztosságot a lock (_lock) objektum biztosítja, megakadályozva, hogy a grafikonfrissítő UI-szál és a mérőszál egyszerre módosítsa a memóriapuffert.
+| Konstans | Jelentés |
+|---|---|
+| `PING` / `PONG` | Élőség-ellenőrzés (kapcsolat teszt) |
+| `SET_PARAM` / `GET_PARAM` | Hardverparaméter írása / olvasása (`GET_PARAM` a kódban jelenleg nincs használva) |
+| `START_MEASURE` / `STOP_MEASURE` | Mérés indítása / leállítása (utóbbi az eszköz felől is jöhet, pl. esésérzékeléskor) |
+| `GET_MEASURE_DATA` | Egy mérési minta lekérése |
+| `GET_IO` / `SET_IO` | Egy I/O láb aktuális értékének lekérdezése / beállítása |
+| `GET_BOARD_DATAS` | Board típus + digitális/analóg lábszám lekérdezése |
+| `GET_PIN_MODE` | Egy adott láb módjának (`INPUT`/`OUTPUT`) lekérdezése |
+| `ACK` | Általános nyugtázás (pl. `START_MEASURE` sikeres indítására) |
+| `ERR` | Belső (PC oldali) hibajelzés – **ezt a PC generálja**, nem az eszköz küldi a vezetéken |
 
-3. Autonóm Trendfigyelés és Vészleállítás
+### 3.3 Hibakezelés dandárja
 
-A rendszer rendelkezik egy intelligens, hardver-szoftver kooperatív védelmi vonallal:
+Minden `Connection.SendMessage` hívás **soha nem dob kifelé kivételt** – hiba esetén mindig
+egy `["ERR", "<üzenet>"]` tömböt ad vissza. Három egymást követő sikertelen próbálkozás után
+(`faildAttempt >= 3`) a `Connection` automatikusan lezárja a portot és `isConnected = false`-ra
+állítja az állapotot, amit a `GlobalData.SerialConnectionStatusChanged` esemény továbbít a
+felületnek. A háttérben futó `ContinousTest` szál ezután újra elkezdi keresni az eszközt.
 
-* A SettingsForm-on keresztül konfigurálható a Min Delta (a minimális változási küszöb) és a Fall Threshold (az egymást követő eső minták kritikus száma).
+Részletek: [`01-Utils-Kommunikacio-Meres.md`](./01-Utils-Kommunikacio-Meres.md).
 
-* Ezeket a paramétereket az alkalmazás indításkor szinkronizálja a hardverrel, illetve helyileg egy config.csv fájlban tárolja az AppData mappában.
+---
 
-* Az Arduino firmware ezen értékek alapján képes autonóm módon detektálni a mért fizikai mennyiség hirtelen zuhanását (pl. csőtörés, nyomásesés), és azonnali STOP_MEASURE / FALL_DETECTED paranccsal leállítani a folyamatot, amit a PC-s szoftver azonnal naplóz.
+## 4. Fájl → felelősség gyorstáblázat
 
-4. Matematikai Analízis és Numerikus Deriválás (AnalysisForm.cs)
+| Fájl | Osztály | Rövid leírás | Részletek |
+|---|---|---|---|
+| `Connection.cs` | `Connection` | Soros port keresése/nyitása, üzenetküldés-fogadás, automatikus reconnect | 01 |
+| `Measure.cs` | `Measure` | Egy mérési ciklus lefolytatása külön szálon, adatpuffer | 01 |
+| `GlobalData.cs` | `GlobalData` | Globális színek + kapcsolat-státusz esemény | 01 |
+| `Trace.cs` | `Trace` | Egyszerű fájlba naplózás | 01 |
+| `Hardware.cs` | `Hardware` | Hardverparaméterek (MIN_DELTA, FALL_THRESHOLD) fájlba/eszközre írása-olvasása | 02 |
+| `Application.cs` | `Application` | Üres váz, jövőbeli alkalmazás-szintű beállításokhoz | 02 |
+| `Main.cs` / `Main_Designer.cs` | `Main` | Főablak: grafikon, mérésindítás, mentés/betöltés, navigáció | 03 |
+| `SettingsForm.cs` / `_Designer.cs` | `SettingsForm` | Hardverparaméterek szerkesztő ablaka | 04 |
+| `Diagnostics.cs` / `_Designer.cs` | `Diagnostics` | I/O lábak élő tesztelése | 04 |
+| `AnalysisForm.cs` / `_Designer.cs` | `AnalysisForm` | Kijelölt szakasz derivált-elemzése | 04 |
+| `AboutForm.cs` / `_Designer.cs` | `AboutForm` | Verzióinfó | 04 |
 
-A mérés lezárultával a felhasználónak lehetősége van a grafikon egy tetszőleges szakaszát kijelölni. A szoftver ekkor automatikusan végrehajtja a kijelölt diszkrét adathalmaz első numerikus deriváltjának kiszámítását (változási sebesség, meredekség):
+---
 
-$\large{\frac{dy}{dx}=\cfrac{y_i+1-y_i}{x_i+1-x_i}}$
-* Statisztikai modul: Meghatározásra kerül a szakasz átlagos változási sebessége, valamint a maximális emelkedési (Peak Rise) és maximális esési (Peak Fall) pontok pontos koordinátái.
+## 5. Tipikus működési folyamat
 
-* Kettős Vizualizáció: Az AnalysisForm egymásra szinkronizálva jeleníti meg az eredeti mérési görbét és a kiszámított derivált függvényt, segítve a fizikai folyamat anomáliáinak matematikai elemzését.
+```mermaid
+sequenceDiagram
+    participant User as Felhasználó
+    participant Main as Main form
+    participant Conn as Connection (háttérszál)
+    participant Meas as Measure (mérési szál)
+    participant Dev as Eszköz (soros port)
 
-## Alkalmazott Technológiai Stog
-* Fejlesztőkörnyezet: Microsoft Visual Studio
-* Programozási nyelv: C# (Erősen típusos, OOP szemlélet)
-* Keretrendszer: .NET Framework (Windows Forms)
-* Adatvizualizáció: System.Windows.Forms.DataVisualization.Charting (MSChart)
-* I/O Kommunikáció: System.IO.Ports.SerialPort (Aszinkron Serial Communication, 9600 Baud)
-* Adatperzisztencia: CSV (Comma-Separated Values) adatstruktúra
+    Main->>Conn: ContinousTest() indítás (app indulásakor)
+    loop 100 ms-onként
+        Conn->>Dev: PING
+        Dev-->>Conn: PONG
+    end
+    Conn-->>Main: GlobalData.SerialConnectionStatusChanged (connected)
+    Main->>Main: StartMeasuring gomb engedélyezése
 
-Konklúzió: A szoftver sikeresen demonstrálja egy ipari jellegű HMI/SCADA (Human-Machine Interface) alkalmazás alapelveit. A futásidejű hibák kezelése (try-catch blokkok a portkezelésnél, beviteli mezők validálása a konfigurációnál), a szálbiztos adatpufferelés és a numerikus matematikai módszerek integrációját.
+    User->>Main: "Start measuring" gombra kattint
+    Main->>Meas: measure.Start()
+    Meas->>Dev: START_MEASURE
+    Dev-->>Meas: ACK
+    loop amíg fut a mérés
+        Meas->>Dev: GET_MEASURE_DATA
+        Dev-->>Meas: MEASURE_DATA | érték
+        Meas->>Meas: Buffer.Enqueue(érték)
+    end
+    Main->>Main: chartUpdateTimer (10ms) kiolvassa a Buffer-t, rajzolja a görbét
+
+    User->>Main: "Force stop" gombra kattint
+    Main->>Meas: measure.Stop()
+    Meas->>Dev: STOP_MEASURE
+    Meas-->>Main: Invoke() – gombok visszaállítása
+```
+
+---
+
+## 6. Billentyűparancsok
+
+| Billentyű | Hatás | Feltétel |
+|---|---|---|
+| `Ctrl + S` | Mérés mentése CSV-be | `SaveButton` engedélyezve van |
+| `Ctrl + ,` | Beállítások megnyitása | `SettingsButton` engedélyezve van |
+| `F1` | "About" ablak megnyitása | mindig |
+| `Ctrl + Shift + D` | Diagnosztika ablak megnyitása (rejtett fejlesztői mód) | nincs már nyitva diagnosztika ablak, és nem fut mérés |
+| `Esc` | Az adott (al)ablak bezárása | `SettingsForm`, `Diagnostics`, `AnalysisForm`, `AboutForm` mindegyikén |
+
+---
+
+## 7. Érdekességek / megjegyzések a kódhoz
+
+Ezek nem hibajelentések, csupán dokumentációs megfigyelések, amelyek hasznosak lehetnek
+karbantartáskor:
+
+- **`Connection.GetSerialPort()`**: a `finally` blokk minden esetben lezárja a soros portot –
+  még sikeres PONG válasz esetén is –, mielőtt a metódus visszatérne. Ez szándékos: a metódus
+  csak *megkeresi* a helyes portot, a tényleges (újra)nyitást a hívó (`ContinousTest`) végzi el.
+- **`Hardware.ReadConfiguration()`** a beolvasott `MIN_DELTA`/`FALL_THRESHOLD` értékeket
+  `>= 0` feltétellel fogadja el, míg a `SettingsForm` mentéskor szigorúbb, `> 0` (pozitív)
+  feltételt vár el a felhasználói bevitelre.
+- **`Application.cs`** jelenleg funkcionálisan üres – csak egy kikommentezett tervezet van
+  benne egy jövőbeli, alkalmazás-szintű konfigurációs singletonhoz.
