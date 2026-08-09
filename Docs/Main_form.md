@@ -4,7 +4,7 @@ A `Main` a program **belépési ablaka**: itt fut a valós idejű nyomásgörbe,
 és állítható le a mérés, itt lehet menteni/betölteni CSV-t, és innen érhető el az összes
 többi ablak (Beállítások, About, illetve a rejtett Diagnosztika).
 
-⬅ Vissza az [áttekintéshez](./00-README.md) · Előző: [Configuration névtér](./02-Configuration-Hardver-Beallitasok.md)
+⬅ Vissza az [áttekintéshez](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/README.md) · Előző: [Configuration névtér](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Configuration.md)
 
 ---
 
