@@ -13,8 +13,9 @@ namespace Vascular_Pressure_Measurement_System
 {
     public partial class Main : Form
     {
+        public Diagnostics testPad = null;
+
         SettingsForm settingsForm = null;
-        TestPad testPad = null;
         Measure measure = null;
         int counter = 0;
         // Chart variables
@@ -66,7 +67,7 @@ namespace Vascular_Pressure_Measurement_System
         private void Main_SizeChanged(object sender, EventArgs e)
         {
             if (this.ClientSize.Width - Chart.Left - 10 < 0 || this.ClientSize.Height - 20 < 0) return;
-            Chart.Size = new System.Drawing.Size(this.ClientSize.Width - Chart.Left - 10, this.ClientSize.Height - 20);
+            Chart.Size = new Size(this.ClientSize.Width - Chart.Left - 10, this.ClientSize.Height - 20);
             RefreshButtonPosition();
         }
 
@@ -326,24 +327,47 @@ namespace Vascular_Pressure_Measurement_System
         }
 
         private bool isCtrlPressed = false;
+        private bool isShiftPressed = false;
         private void Main_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.ControlKey)
+            if (e.KeyCode.Equals(Keys.ControlKey))
                 isCtrlPressed = true;
+            if (e.KeyCode.Equals(Keys.ShiftKey))
+                isShiftPressed = true;
 
-            if (isCtrlPressed && e.KeyCode == Keys.S && SaveButton.Enabled)
-                SaveButton_Click(sender, e);
-
-            if (isCtrlPressed && e.KeyCode == Keys.Q && testPad == null && !measure.isRunning())
+            if (isCtrlPressed && e.KeyCode.Equals(Keys.S) && SaveButton.Enabled)
             {
-                testPad = new TestPad();
+                SaveButton_Click(sender, e);
+                isCtrlPressed = false;
+                isShiftPressed = false;
+            }
+
+            if (isCtrlPressed && e.KeyCode.Equals(Keys.Oemcomma) && SettingsButton.Enabled)
+            {
+                SettingsButton_Click(sender, e);
+                isCtrlPressed = false;
+                isShiftPressed = false;
+            }
+
+            if (e.KeyCode.Equals(Keys.F1))
+            {
+                AboutButton_Click(sender, e);
+                isCtrlPressed = false;
+                isShiftPressed = false;
+            }
+
+            if (isCtrlPressed && isShiftPressed && e.KeyCode.Equals(Keys.D) && testPad == null && !measure.isRunning())
+            {
+                testPad = new Diagnostics(this);
                 testPad.Show();
+                isCtrlPressed = false;
+                isShiftPressed = false;
             }
         }
 
         private void Main_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.ControlKey)
+            if (e.KeyCode.Equals(Keys.ControlKey))
                 isCtrlPressed = false;
         }
     }

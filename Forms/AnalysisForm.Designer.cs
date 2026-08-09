@@ -193,6 +193,8 @@
             this.Name = "AnalysisForm";
             this.Text = "VRP - Analysis";
             this.SizeChanged += new System.EventHandler(this.Derivate_SizeChanged);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Analysis_KeyDown);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Analysis_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.chartDerivative)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -13,6 +13,8 @@ namespace Vascular_Pressure_Measurement_System.Forms
         {
             InitializeComponent();
 
+            KeyPreview = true;
+
             // Form elrendezés beállítása
             chartDerivative.Left = 200;
             chartDerivative.Top = 0;
@@ -65,6 +67,22 @@ namespace Vascular_Pressure_Measurement_System.Forms
             chartDerivative.Top = 0;
             chartDerivative.Width = this.ClientSize.Width - 200;
             chartDerivative.Height = this.ClientSize.Height;
+        }
+
+        private bool isCtrlPressed = false;
+        private void Analysis_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode.Equals(Keys.ControlKey))
+                isCtrlPressed = true;
+
+            if (e.KeyCode.Equals(Keys.Escape))
+                this.Close();
+        }
+
+        private void Analysis_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode.Equals(Keys.ControlKey))
+                isCtrlPressed = false;
         }
     }
 }

@@ -151,6 +151,8 @@
             this.Name = "SettingsForm";
             this.ShowInTaskbar = false;
             this.Text = "VRP - Settings";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Settings_KeyDown);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Settings_KeyUp);
             this.parameterBox.ResumeLayout(false);
             this.parameterBox.PerformLayout();
             this.ResumeLayout(false);

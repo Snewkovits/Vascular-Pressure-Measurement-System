@@ -13,6 +13,8 @@ namespace Vascular_Pressure_Measurement_System.Forms
         {
             InitializeComponent();
 
+            KeyPreview = true;
+
             if (Connection.isConnected)
             {
                 Dictionary<string, string> configs = Configuration.Hardware.ReadConfiguration();
@@ -63,6 +65,22 @@ namespace Vascular_Pressure_Measurement_System.Forms
         private void CloseForm()
         {
             this.Close();
+        }
+
+        private bool isCtrlPressed = false;
+        private void Settings_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode.Equals(Keys.ControlKey))
+                isCtrlPressed = true;
+
+            if (e.KeyCode.Equals(Keys.Escape))
+                this.Close();
+        }
+
+        private void Settings_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode.Equals(Keys.ControlKey))
+                isCtrlPressed = false;
         }
     }
 }

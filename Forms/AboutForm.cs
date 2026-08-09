@@ -10,6 +10,8 @@ namespace Vascular_Pressure_Measurement_System.Forms
         public AboutForm()
         {
             InitializeComponent();
+            
+            KeyPreview = true;
 
             string assamblyPath = Assembly.GetExecutingAssembly().Location;
 
@@ -22,6 +24,22 @@ namespace Vascular_Pressure_Measurement_System.Forms
 
             version.Text = $"v1.{lastModified:yyMMdd}";
             releaseDate.Text = $"{lastModified.Year}. {lastModified.Month:00}. {lastModified.Day:00}";
+        }
+
+        private bool isCtrlPressed = false;
+        private void About_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode.Equals(Keys.ControlKey))
+                isCtrlPressed = true;
+
+            if (e.KeyCode.Equals(Keys.Escape))
+                this.Close();
+        }
+
+        private void About_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode.Equals(Keys.ControlKey))
+                isCtrlPressed = false;
         }
     }
 }

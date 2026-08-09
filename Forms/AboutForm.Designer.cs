@@ -153,6 +153,8 @@
             this.MinimumSize = new System.Drawing.Size(568, 305);
             this.Name = "AboutForm";
             this.Text = "VRP - About";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.About_KeyDown);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.About_KeyUp);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

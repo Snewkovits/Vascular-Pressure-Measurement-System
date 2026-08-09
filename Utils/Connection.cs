@@ -165,55 +165,82 @@ namespace Vascular_Pressure_Measurement_System.Utils
         // Ez a metódus egy üzenetet küld a soros porton a megadott cmd és data paraméterekkel, majd várja a választ. Az üzenet formátuma: <ID|CMD|DATA|CHK>, ahol ID egy növekvő számláló, CMD a parancs, DATA a parancs adatai, és CHK a payload (ID|CMD|DATA) XOR értéke. A válasz formátuma: <ID|ACK|DATA|CHK>, ahol ID megegyezik a küldött üzenet ID-jével, ACK egy állandó string, DATA a válasz adatai, és CHK a payload (ID|ACK|DATA) XOR értéke. Ha bármilyen hiba történik (pl. nincs kapcsolat, nem megfelelő válasz), akkor egy "ERR" és "0" értékeket tartalmazó string tömböt ad vissza.
         public static string[] SendMessage(string cmd, string data) // ID|CMD|DATA|CHK
         {
-            if (serialPort == null || !serialPort.IsOpen)
-                return new string[] { CommandType.ERR, "Device is not connected" };
-
             lock (_serialPortLock)
             {
-                string id = (msgId++).ToString();
-                string payload = $"{id}|{cmd}|{data}";
-                byte chk = CalculateChecksum(payload);
-
-                string msg = $"<{payload}|{chk:X2}>";
-
-                // Puffer ürítés és küldés már a zároláson belül
-                serialPort.DiscardInBuffer();
-                serialPort.DiscardOutBuffer();
-                serialPort.Write(msg);
-
-                string response = string.Empty;
-
                 try
                 {
-                    response = serialPort.ReadTo(">") + ">";
+                    if (serialPort == null || !serialPort.IsOpen)
+                        return new string[] { CommandType.ERR, "Device is not connected" };
+
+                    string id = (msgId++).ToString();
+                    string payload = $"{id}|{cmd}|{data}";
+                    byte chk = CalculateChecksum(payload);
+                    string msg = $"<{payload}|{chk:X2}>";
+
+                    try
+                    {
+                        ClearBuffers();
+                    }
+                    catch (Exception)
+                    {
+                        HandleFailure();
+                        return new string[] { CommandType.ERR, "Buffer error" };
+                    }
+
+                    serialPort.Write(msg);
+
+                    string response = serialPort.ReadTo(">") + ">";
+
+                    response = response.Trim('<', '>');
+                    string[] responsePayload = response.Split('|');
+
+                    if (responsePayload.Length != 4)
+                    {
+                        HandleFailure();
+                        return new string[] { CommandType.ERR, "Invalid format" };
+                    }
+
+                    if (responsePayload[0] != id)
+                    {
+                        return new string[] { CommandType.ERR, "ID mismatch" };
+                    }
+
+                    string checkPayload = $"{responsePayload[0]}|{responsePayload[1]}|{responsePayload[2]}";
+                    if (CalculateChecksum(checkPayload) != Convert.ToByte(responsePayload[3], 16))
+                    {
+                        return new string[] { CommandType.ERR, "Checksum error" };
+                    }
+
+                    faildAttempt = 0;
+                    return new string[] { responsePayload[1], responsePayload[2] };
                 }
-                catch
+                catch (TimeoutException)
                 {
                     HandleFailure();
-                    return new string[] { CommandType.ERR, "" };
+                    return new string[] { CommandType.ERR, "Timeout" };
                 }
-
-                response = response.Trim('<', '>');
-                string[] responsePayload = response.Split('|');
-
-                if (responsePayload.Length != 4)
+                catch (Exception ex)
                 {
                     HandleFailure();
-                    return new string[] { CommandType.ERR, "" };
+                    return new string[] { CommandType.ERR, ex.Message };
                 }
-                if (responsePayload[0] != id)
-                {
-                    return new string[] { CommandType.ERR, "" };
-                }
-                if (CalculateChecksum($"{responsePayload[0]}|{responsePayload[1]}|{responsePayload[2]}") != Convert.ToByte(responsePayload[3], 16))
-                {
-                    return new string[] { CommandType.ERR, "" };
-                }
+            }
+        }
 
-                // Sikeres kommunikáció nullázzuk
-                faildAttempt = 0;
-
-                return new string[] { responsePayload[1], responsePayload[2] };
+        private static void ClearBuffers()
+        {
+            try
+            {
+                if (serialPort != null && serialPort.IsOpen)
+                {
+                    serialPort.DiscardInBuffer();
+                    serialPort.DiscardOutBuffer();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Puffer ürítési hiba esetén érdemes a portot zártnak tekinteni
+                System.Diagnostics.Debug.WriteLine($"Buffer clear error: {ex.Message}");
             }
         }
 
@@ -281,6 +308,10 @@ namespace Vascular_Pressure_Measurement_System.Utils
             public const string START_MEASURE = "START_MEASURE";
             public const string STOP_MEASURE = "STOP_MEASURE";
             public const string GET_MEASURE_DATA = "GET_MEASURE_DATA";
+            public const string GET_IO = "GET_IO";
+            public const string SET_IO = "SET_IO";
+            public const string GET_BOARD_DATAS = "GET_BOARD_DATAS";
+            public const string GET_PIN_MODE = "GET_PIN_MODE";
             public const string ACK = "ACK";
             public const string ERR = "ERR";
         }

@@ -54,12 +54,15 @@
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Configuration\Application.cs" />
-    <Compile Include="Forms\TestPad.cs">
+    <Compile Include="Forms\Diagnostics.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\TestPad.Designer.cs">
-      <DependentUpon>TestPad.cs</DependentUpon>
+    <Compile Include="Forms\Diagnostics.Designer.cs">
+      <DependentUpon>Diagnostics.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Forms\Diagnostics.resx">
+      <DependentUpon>Diagnostics.cs</DependentUpon>
+    </EmbeddedResource>
     <Compile Include="Utils\Trace.cs" />
     <EmbeddedResource Include="Forms\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
@@ -94,9 +97,6 @@
     <Compile Include="Utils\Connection.cs" />
     <Compile Include="Utils\GlobalData.cs" />
     <Compile Include="Utils\Measure.cs" />
-    <EmbeddedResource Include="Forms\TestPad.resx">
-      <DependentUpon>TestPad.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>
@@ -129,6 +129,7 @@
     <Folder Include="Notes\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\handyman.ico" />
     <Content Include="Resources\ud-also-eng-vilagoshatterre-kicsi.ico" />
     <Content Include="Resources\ud-also-eng-vilagoshatterre-kicsi.png" />
     <Content Include="Resources\ud-also-eng-vilagoshatterre.png" />
