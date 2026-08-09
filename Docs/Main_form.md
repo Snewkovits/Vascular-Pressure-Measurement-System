@@ -38,7 +38,7 @@ A gombok bal oldalon, egymás alatt helyezkednek el; a `Chart` a fennmaradó hel
 
 1. `InitializeComponent()` – Designer által generált UI felépítése.
 2. `Connection.ContinousTest()` – elindítja a **folyamatos kapcsolat-figyelő háttérszálat**
-   (lásd [`01-Utils-Kommunikacio-Meres.md`](./01-Utils-Kommunikacio-Meres.md)).
+   (lásd [`Utils`](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Utils.md)).
 3. Feliratkozik a `GlobalData.SerialConnectionStatusChanged` eseményre
    (`GlobalData_SerialConnectionStatus` kezelő).
 4. Létrehozza a `Measure` példányt (`this`-t adva át, hogy a mérés vissza tudjon írni az
@@ -139,7 +139,7 @@ UI-hoz, csak a pufferbe ír.
 5. Beállítja és elindítja a `chartUpdateTimer`-t (10 ms intervallum, `ContinousChartUpdate`
    eseménykezelő hozzáadva).
 6. `measure.Start()` – elindítja a tényleges mérést (lásd
-   [`01-Utils-Kommunikacio-Meres.md`](./01-Utils-Kommunikacio-Meres.md)).
+   [`Utils`](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Utils.md)).
 
 ### `private void SettingsButton_Click(object sender, EventArgs e)`
 
@@ -199,7 +199,7 @@ funkciót.
    megjeleníti (`Show()` – nem modális).
 
 Az `AnalysisForm` maga végzi a statisztikák (átlag, max/min meredekség és helyük)
-kiszámítását – lásd [`04-Tovabbi-Formok.md`](./04-Tovabbi-Formok.md).
+kiszámítását – lásd [`04-Tovabbi-Formok.md`](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Forms.md).
 
 ## 9. About ablak
 
