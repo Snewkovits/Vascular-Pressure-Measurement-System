@@ -3,7 +3,7 @@
 Ez a fájl a `Vascular_Pressure_Measurement_System.Configuration` névtér két osztályát
 dokumentálja: `Hardware` és `Application`.
 
-⬅ Vissza az [áttekintéshez](./00-README.md) · Előző: [Utils névtér](./01-Utils-Kommunikacio-Meres.md)
+⬅ Vissza az [áttekintéshez](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/README.md) · Előző: [Utils névtér](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Utils.md)
 
 ---
 
