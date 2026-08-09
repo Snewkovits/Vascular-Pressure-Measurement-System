@@ -5,7 +5,7 @@ Ez a fájl a `Vascular_Pressure_Measurement_System.Utils` névtér négy osztál
 "motorját": a soros porti kommunikációt, a mérési ciklust és a hozzájuk tartozó
 szálbiztos, globálisan elérhető állapotot.
 
-⬅ Vissza az [áttekintéshez](./00-README.md)
+⬅ Vissza az [áttekintéshez](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/README.md)
 
 ---
 
