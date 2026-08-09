@@ -143,7 +143,7 @@ el az alkalmazás indulásakor, és csak az alkalmazás bezárásakor (`stopConn
     - ha még **nem küldte el** az induláskori hardver-konfigurációt
       (`!isConfigSent`), meghívja a `Configuration.Hardware.SetParameters()`-t
       (paraméterek nélkül → ez a mentett fájl-konfigurációt tölti fel az eszközre,
-      lásd [02. fájl](./02-Configuration-Hardver-Beallitasok.md)); hibát `Trace.WriteTrace`-szel naplóz;
+      lásd [Configuration](https://github.com/Snewkovits/Vascular-Pressure-Measurement-System/blob/master/Docs/Configuration.md)); hibát `Trace.WriteTrace`-szel naplóz;
     - `isConnected = true`, állapot frissítése;
   - ha a válasz **nem** `PONG`, vagy kivétel történt → `CloseConnection()` hívása, és
     `isConfigSent = false` (a következő sikeres csatlakozáskor újra elküldi a konfigot).
@@ -221,7 +221,7 @@ eszköz-kezdeményezésű (aszinkron) üzenetek fogadására készült elő.
 ### `public static class CommandType`
 
 Névtér-szerű konstansgyűjtemény a protokoll parancsszavaihoz (lásd táblázat a
-[README-ben](./00-README.md#32-parancstípusok-connectioncommandtype)). Ezeket használja
+[README-ben](./README.md#32-parancstípusok-connectioncommandtype)). Ezeket használja
 minden hívó a "mágikus string" elgépelések elkerülésére (bár néhány helyen, pl.
 `Measure.Start()`-ban, a kód közvetlenül `"START_MEASURE"` string literált használ a
 konstans helyett – funkcionálisan ekvivalens).
