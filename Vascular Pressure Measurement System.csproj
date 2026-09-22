@@ -60,6 +60,7 @@
     <Compile Include="Forms\Diagnostics.Designer.cs">
       <DependentUpon>Diagnostics.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\ValveControl.cs" />
     <EmbeddedResource Include="Forms\Diagnostics.resx">
       <DependentUpon>Diagnostics.cs</DependentUpon>
     </EmbeddedResource>
