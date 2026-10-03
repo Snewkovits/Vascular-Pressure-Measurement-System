@@ -8,12 +8,13 @@ namespace Vascular_Pressure_Measurement_System.Utils
 {
     public static class Connection
     {
+        private static int msgId = 0;
+
         public static bool isConnected = false;
         public static bool stopConnection = false;
         public static SerialPort serialPort = null;
-
-        private static int msgId = 0;
         public static int faildAttempt = 0;
+        public static bool isBusy = false; // Ez a változó jelzi, hogy a soros port éppen foglalt-e. Ha true, akkor más szálak nem próbálkozhatnak üzenetküldéssel.
 
         internal static readonly object _serialPortLock = new object();
 
@@ -239,18 +240,19 @@ namespace Vascular_Pressure_Measurement_System.Utils
             }
             catch (Exception ex)
             {
-                // Puffer ürítési hiba esetén érdemes a portot zártnak tekinteni
-                System.Diagnostics.Debug.WriteLine($"Buffer clear error: {ex.Message}");
+                HandleFailure();
             }
         }
 
         // Segédfüggvény a hiba kezelésére
         private static void HandleFailure()
         {
+            if (isBusy) return; // Ha a port éppen foglalt, ne vegyük figyelembe a hibát, mert az lehet, hogy csak egy másik szál miatt van.
+
             faildAttempt++;
             if (faildAttempt >= 3)
             {
-                serialPort.Close();
+                if (serialPort != null && serialPort.IsOpen) serialPort.Close();
                 isConnected = false;
                 GlobalData.SerialConnectionStatus = false;
                 faildAttempt = 0;
@@ -268,14 +270,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
             }
             catch
             {
-                faildAttempt++;
-                if (faildAttempt >= 3)
-                {
-                    serialPort.Close();
-                    isConnected = false;
-                    GlobalData.SerialConnectionStatus = false;
-                    faildAttempt = 0;
-                }
+                HandleFailure();
                 return new string[] { CommandType.ERR, "" };
             }
 
@@ -285,14 +280,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
 
             if (responsePayload.Length != 4)
             {
-                faildAttempt++;
-                if (faildAttempt >= 3)
-                {
-                    serialPort.Close();
-                    isConnected = false;
-                    GlobalData.SerialConnectionStatus = false;
-                    faildAttempt = 0;
-                }
+                HandleFailure();
                 return new string[] { CommandType.ERR, "" };
             }
             if (CalculateChecksum($"{responsePayload[0]}|{responsePayload[1]}|{responsePayload[2]}") != Convert.ToByte(responsePayload[3], 16)) return new string[] { CommandType.ERR, "" };
