@@ -57,9 +57,12 @@ enum ValveState {
   VALVE_CLOSING,
   VALVE_POSITIONING_OPEN,
   VALVE_POSITIONING_CLOSE,
+  VALVE_CALIBRATING_STARTING,
   VALVE_CALIBRATING_OPEN,
   VALVE_CALIBRATING_CLOSE
 };
+
+const unsigned long CALIBRATION_IGNORE_MS = 2000;
 
 struct ValveControl {
   ValveState state = VALVE_IDLE;
@@ -80,6 +83,26 @@ struct ValveControl {
 
   int position = 0;
   int targetPosition = 0;
+};
+
+struct PressureMeasurement {
+  uint8_t pin;
+
+  float EU0 = 0.0;
+  float EU100 = 200.0;
+  float EU;
+
+  float U0 = 1.1;
+  float U100 = 4.67;
+  float U;
+
+  int raw0 = 248;
+  int raw100 = 955;
+  int raw;
+
+  float percentage;
+
+  bool valid;
 };
 
 struct Message {
@@ -104,6 +127,10 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
 ValveControl valve1;
 ValveControl valve2;
 ValveControl valve3;
+
+PressureMeasurement pt0;
+PressureMeasurement pt1;
+PressureMeasurement pt2;
 
 String buffer = "";
 bool inFrame = false;
@@ -161,19 +188,48 @@ void setup() {
   pinMode(valve2.isClosePin, INPUT_PULLUP);    // Valve 2 close
   pinMode(valve3.isOpenPin, INPUT_PULLUP);     // Valve 3 open
   pinMode(valve3.isClosePin, INPUT_PULLUP);    // Valve 3 close
+
+  pt0.pin = A0;
+  pt1.pin = A2;
+  pt2.pin = A4;
+  /*
+  while (true) {
+    analogReadEnhanced(pt1);
+    Serial.print("EU: ");
+    Serial.print(pt1.EU);
+    Serial.println(" kPa");
+    
+    Serial.print("U: ");
+    Serial.print(pt1.U);
+    Serial.println(" V");
+    
+    Serial.print("RAW: ");
+    Serial.println(pt1.raw);
+    delay(2000);
+  }
+  */
 }
 
 // ================= LOOP =================
 void loop() {
   handleSerial();   // mindig fusson
 
-  if (!valve1.calibrated) calibrateValve(valve1);
-  if (!valve2.calibrated) calibrateValve(valve2);
-  if (!valve3.calibrated) calibrateValve(valve3);
+if (!valve1.calibrated && !valve1.calibration)
+    calibrateValve(valve1);
+
+if (!valve2.calibrated && !valve2.calibration)
+    calibrateValve(valve2);
+
+if (!valve3.calibrated && !valve3.calibration)
+    calibrateValve(valve3);
 
   updateValve(valve1);
   updateValve(valve2);
   updateValve(valve3);
+
+  analogReadEnhanced(pt0);
+  analogReadEnhanced(pt1);
+  analogReadEnhanced(pt2);
 }
 
 // ================= CHECKSUM =================
@@ -381,7 +437,7 @@ int handleMeasure() {
   if (now - lastMeasure >= interval) {
     lastMeasure = now;
 
-    int value = analogRead(A0);
+    int value = (pt1.EU + pt2.EU) / 2.0f;
 
     // ===== Trend figyelés =====
     if (lastValue != -1) {
@@ -581,6 +637,7 @@ void getPinModeCommand(const String &id, const String &data) {
 void startOpenValve(ValveControl &valve, String id) {
   if (digitalRead(valve.isOpenPin) == LOW) {
     digitalWrite(valve.openPin, LOW);
+    valve.state = VALVE_IDLE;
     return;
   }
 
@@ -588,12 +645,13 @@ void startOpenValve(ValveControl &valve, String id) {
   digitalWrite(valve.openPin, HIGH);
 
   valve.state = VALVE_OPENING;
-  sendMessage(id, "ACK", "STARTED");
+  sendMessage(id, "ACK", "STARTED OPENING");
 }
 
 void startCloseValve(ValveControl &valve, String id) {
   if (digitalRead(valve.isClosePin) == LOW) {
     digitalWrite(valve.closePin, LOW);
+    valve.state = VALVE_IDLE;
     return;
   }
 
@@ -601,7 +659,7 @@ void startCloseValve(ValveControl &valve, String id) {
   digitalWrite(valve.closePin, HIGH);
 
   valve.state = VALVE_CLOSING;
-  sendMessage(id, "ACK", "STARTED");
+  sendMessage(id, "ACK", "STARTED CLOSING");
 }
 
 void positioningValve(ValveControl &valve, int position, String id) {
@@ -648,15 +706,16 @@ void stopValve(ValveControl &valve) {
 }
 
 void calibrateValve(ValveControl &valve) {
-  stopValve(valve);
+    stopValve(valve);
 
-  startOpenValve(valve, "0");
+    valve.calibration = true;
+    valve.calibrated = false;
 
-  valve.calibration = true;
+    valve.startTime = millis();
+    valve.state = VALVE_CALIBRATING_STARTING;
 
-  valve.state = VALVE_CALIBRATING_CLOSE;
-  valve.startTime = millis();
-  digitalWrite(valve.closePin, HIGH);
+    digitalWrite(valve.closePin, LOW);
+    digitalWrite(valve.openPin, HIGH);
 }
 
 void updateValve(ValveControl &valve) {
@@ -696,20 +755,65 @@ void updateValve(ValveControl &valve) {
         valve.position = valve.targetPosition;
       }
       break;
-    case VALVE_CALIBRATING_CLOSE:
-      if (digitalRead(valve.isClosePin) == LOW) {
-        digitalWrite(valve.closePin, LOW);
-        valve.closeDuration = millis() - valve.startTime;
-        valve.state = VALVE_CALIBRATING_OPEN;
-        valve.startTime = millis();
+    case VALVE_CALIBRATING_STARTING:
+      if (digitalRead(valve.isOpenPin) == LOW) {
+          digitalWrite(valve.openPin, LOW);
+          
+          if (millis() - valve.startTime < CALIBRATION_IGNORE_MS)
+              break;
+          digitalWrite(valve.closePin, HIGH);
+
+          valve.state = VALVE_CALIBRATING_CLOSE;
+          valve.startTime = millis();
       }
       break;
+
+
+    case VALVE_CALIBRATING_CLOSE:
+      if (digitalRead(valve.isClosePin) == LOW) {
+          digitalWrite(valve.closePin, LOW);
+
+          if (valve.closeDuration == 0) 
+            valve.closeDuration = millis() - valve.startTime;
+          
+          if (millis() - valve.startTime - valve.closeDuration < CALIBRATION_IGNORE_MS)
+              break;
+
+          digitalWrite(valve.openPin, HIGH);
+
+          valve.state = VALVE_CALIBRATING_OPEN;
+          valve.startTime = millis();
+      }
+      break;
+
+
     case VALVE_CALIBRATING_OPEN:
       if (digitalRead(valve.isOpenPin) == LOW) {
-        valve.openDuration = millis() - valve.startTime;
-        stopValve(valve);
-        valve.calibrated = true;
+          valve.openDuration = millis() - valve.startTime;
+
+          stopValve(valve);
+
+          valve.calibrated = true;
+          valve.calibration = false;
+          valve.state = VALVE_IDLE;
       }
       break;
   }
+}
+
+// ============== ANALOGES ==============
+void analogReadEnhanced(PressureMeasurement &pt) {
+    pt.raw = analogRead(pt.pin);
+
+    pt.percentage =
+        ((float)(pt.raw - pt.raw0) /
+        (pt.raw100 - pt.raw0)) * 100.0f;
+
+    pt.percentage = constrain(pt.percentage, 0.0f, 100.0f);
+
+    pt.U = pt.U0 +
+        (pt.U100 - pt.U0) * (pt.percentage / 100.0f);
+
+    pt.EU = pt.EU0 +
+        (pt.EU100 - pt.EU0) * (pt.percentage / 100.0f);
 }
