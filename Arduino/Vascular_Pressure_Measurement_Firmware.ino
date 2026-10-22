@@ -1,6 +1,6 @@
-#define STX '<'
-#define ETX '>'
 
+
+#pragma region Hardware definition
 #define DIGITAL_PINS (NUM_DIGITAL_PINS - NUM_ANALOG_INPUTS)
 #define ANALOG_PINS NUM_ANALOG_INPUTS
 
@@ -38,117 +38,208 @@
   #define BOARD_TYPE "UNKNOWN"
 #endif
 
-byte calcChecksum(const String &s);
-void handleSerial();
-void processMessage(String msg);
-void processCommand(String id, String cmd, String data);
-int handleMeasure();
-void sendMessage(String id, String command, String data);
-void setParameter(String id, String data);
-void getParameter(String id, String data);
-void setInputOutput(const String &id, const String &data);
-void getInputOutput(const String &id, const String &data);
-int getPinMode(uint8_t pin);
-void getPinModeCommand(const String &id, const String &data);
-
-enum ValveState {
-  VALVE_IDLE,
-  VALVE_OPENING,
-  VALVE_CLOSING,
-  VALVE_POSITIONING_OPEN,
-  VALVE_POSITIONING_CLOSE,
-  VALVE_CALIBRATING_STARTING,
-  VALVE_CALIBRATING_OPEN,
-  VALVE_CALIBRATING_CLOSE
-};
-
-const unsigned long CALIBRATION_IGNORE_MS = 2000;
-
-struct ValveControl {
-  ValveState state = VALVE_IDLE;
-  bool calibrated = false;
-  bool calibration = false;
-
-  int openPin;
-  int closePin;
-  int isOpenPin;
-  int isClosePin;
-
-  unsigned long startTime = 0;
-
-  unsigned long openDuration = 0;
-  unsigned long closeDuration = 0;
-
-  unsigned long movementDuration = 0;
-
-  int position = 0;
-  int targetPosition = 0;
-};
-
-struct PressureMeasurement {
-  uint8_t pin;
-
-  float EU0 = 0.0;
-  float EU100 = 200.0;
-  float EU;
-
-  float U0 = 1.1;
-  float U100 = 4.67;
-  float U;
-
-  int raw0 = 248;
-  int raw100 = 955;
-  int raw;
-
-  float percentage;
-
-  bool valid;
-};
-
-struct Message {
-  String id;
-  String command;
-  String data;
-  String checksum;
-};
-
-void startOpenValve(ValveControl &valve, String id);
-void startCloseValve(ValveControl &valve, String id);
-void positioningValve(ValveControl &valve, int position, String id);
-void stopValve(ValveControl &valve);
-void calibrateValve(ValveControl &valve);
-void updateValve(ValveControl &valve);
-
 int wiredDigitals[] = {23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53};
 int relays[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
 int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
 
-// ======= VALVES PARAMETERS ======
-ValveControl valve1;
-ValveControl valve2;
-ValveControl valve3;
+#pragma endregion
 
-PressureMeasurement pt0;
-PressureMeasurement pt1;
-PressureMeasurement pt2;
+#pragma region Program header
 
-String buffer = "";
-bool inFrame = false;
+  #pragma region Method def
+  byte calcChecksum(const String &s);
+  void handleSerial();
+  void processMessage(String msg);
+  void processCommand(String id, String cmd, String data);
+  float handleMeasure();
+  void sendMessage(String id, String command, String data);
+  void setParameter(String id, String data);
+  void getParameter(String id, String data);
+  void setInputOutput(const String &id, const String &data);
+  void getInputOutput(const String &id, const String &data);
+  int getPinMode(uint8_t pin);
+  void getPinModeCommand(const String &id, const String &data);
+  #pragma endregion
 
-bool measure = false;
+  #pragma region Measure
 
-unsigned long lastMeasure = 0;
-const unsigned long interval = 10;
+  enum MeasureStatus {
+    MEASURE_IDLE,
+    MEASURE_START_POSITION,
+    MEASURE_OPENING_VALVE1,
+    MEASURE_WAITING_VALVE3_CLOSE,
+    MEASURE_RUNNING,
+    MEASURE_FALL_DETECTED,
+    MEASURE_STOPPING
+  };
 
-int lastValue = -1;
-int fallingCount = 0;
+  struct Measure {
+    MeasureStatus status = MEASURE_IDLE;
+    float value = 0.0f;
+    bool valid = false;
+  };
 
-int FALL_THRESHOLD = 3;   // ennyi egymás utáni csökkenés kell
-int MIN_DELTA = 2;        // zajszűrés
+  Measure measurement;
+  bool measureActive = false;
 
+  unsigned long pumpStartTime = 0;
+  const unsigned long VALVE3_CLOSE_DELAY_MS = 5000;
 
+  const unsigned long MEASURE_INTERVAL_MS = 10;
+  const float MIN_DELTA = 2.0f;
+  const int FALL_THRESHOLD = 3;
 
-// ================= SETUP =================
+  float lastValue = 0.0f;
+  int fallingCount = 0;
+  unsigned long lastMeasure = 0;
+  bool firstTrendSample = true;
+
+  #pragma endregion
+
+  #pragma region Valve
+  enum ValveState {
+    VALVE_IDLE,
+    VALVE_OPENING,
+    VALVE_CLOSING,
+    VALVE_POSITIONING_OPEN,
+    VALVE_POSITIONING_CLOSE,
+    VALVE_CALIBRATING_STARTING,
+    VALVE_CALIBRATING_OPEN,
+    VALVE_CALIBRATING_CLOSE
+  };
+
+  const unsigned long CALIBRATION_IGNORE_MS = 2000;
+
+  struct ValveControl {
+    ValveState state = VALVE_IDLE;
+    bool calibrated = false;
+    bool calibration = false;
+
+    int openPin;
+    int closePin;
+    int isOpenPin;
+    int isClosePin;
+
+    unsigned long startTime = 0;
+
+    unsigned long openDuration = 0;
+    unsigned long closeDuration = 0;
+
+    unsigned long movementDuration = 0;
+
+    int position = 0;
+    int targetPosition = 0;
+  };
+
+  void startOpenValve(ValveControl &valve, String id);
+  void startCloseValve(ValveControl &valve, String id);
+  void positioningValve(ValveControl &valve, int position, String id);
+  void stopValve(ValveControl &valve);
+  void calibrateValve(ValveControl &valve);
+  void updateValve(ValveControl &valve);
+
+  #pragma endregion
+
+  #pragma region Pump
+  enum PumpState {
+    PUMP_IDLE,
+    PUMP_RUNNING
+  };
+
+  struct PumpControl {
+    PumpState state = PUMP_IDLE;
+
+    int pin;
+
+    void begin(uint8_t outputPin) {
+      pin = outputPin;
+      
+      pinMode(pin, OUTPUT);
+      digitalWrite(pin, LOW);
+      state = PUMP_IDLE;
+    }
+
+    void start() {
+      digitalWrite(pin, HIGH);
+      state = PUMP_RUNNING;
+    }
+
+    void stop() {
+      digitalWrite(pin, LOW);
+      state = PUMP_IDLE;
+    }
+  };
+
+  #pragma endregion
+
+  #pragma region Analog
+  struct PressureMeasurement {
+    uint8_t pin;
+
+    float EU0 = 0.0;
+    float EU100 = 200.0;
+    float EU;
+
+    float U0 = 1.1;
+    float U100 = 4.67;
+    float U;
+
+    int raw0 = 248;
+    int raw100 = 955;
+    int raw;
+
+    float percentage;
+
+    bool valid;
+  };
+
+  #pragma endregion
+
+  #define STX '<'
+  #define ETX '>'
+
+  struct Message {
+    String id;
+    String command;
+    String data;
+    String checksum;
+  };
+
+  Message inner;
+  message.id = -1;
+  message.command = "INNER";
+  message.data = "";
+
+  #pragma region Parameters
+  ValveControl valve1;
+  ValveControl valve2;
+  ValveControl valve3;
+
+  PressureMeasurement pt0;
+  PressureMeasurement pt1;
+  PressureMeasurement pt2;
+
+  PumpControl pump;
+
+  String buffer = "";
+  bool inFrame = false;
+
+  bool measure = false;
+  int measureStatus = 0;
+
+  unsigned long lastMeasure = 0;
+  const unsigned long interval = 10;
+
+  int lastValue = -1;
+  int fallingCount = 0;
+
+  int FALL_THRESHOLD = 3;   // ennyi egymás utáni csökkenés kell
+  int MIN_DELTA = 2;        // zajszűrés
+  #pragma endregion
+
+#pragma endregion
+
+#pragma region Setup
 void setup() {
   Serial.begin(1000000);
 
@@ -182,6 +273,8 @@ void setup() {
   valve3.isOpenPin    = inputs[4];
   valve3.isClosePin   = inputs[5];
 
+  pump.begin(relays[6]);
+
   pinMode(valve1.isOpenPin, INPUT_PULLUP);     // Valve 1 open
   pinMode(valve1.isClosePin, INPUT_PULLUP);    // Valve 1 close
   pinMode(valve2.isOpenPin, INPUT_PULLUP);     // Valve 2 open
@@ -209,19 +302,20 @@ void setup() {
   }
   */
 }
+#pragma endregion
 
-// ================= LOOP =================
+#pragma region Main
 void loop() {
   handleSerial();   // mindig fusson
 
-if (!valve1.calibrated && !valve1.calibration)
-    calibrateValve(valve1);
+  if (!valve1.calibrated && !valve1.calibration)
+      calibrateValve(valve1);
 
-if (!valve2.calibrated && !valve2.calibration)
-    calibrateValve(valve2);
+  if (!valve2.calibrated && !valve2.calibration)
+      calibrateValve(valve2);
 
-if (!valve3.calibrated && !valve3.calibration)
-    calibrateValve(valve3);
+  if (!valve3.calibrated && !valve3.calibration)
+      calibrateValve(valve3);
 
   updateValve(valve1);
   updateValve(valve2);
@@ -230,9 +324,13 @@ if (!valve3.calibrated && !valve3.calibration)
   analogReadEnhanced(pt0);
   analogReadEnhanced(pt1);
   analogReadEnhanced(pt2);
-}
 
-// ================= CHECKSUM =================
+  updateMeasureValue();
+  updateMeasure();
+}
+#pragma endregion
+
+#pragma region Serial Communication
 byte calcChecksum(const String &s) {
   byte chk = 0;
   for (int i = 0; i < s.length(); i++) {
@@ -241,7 +339,6 @@ byte calcChecksum(const String &s) {
   return chk;
 }
 
-// ================= SERIAL PARSER =================
 void handleSerial() {
   const size_t MAX_FRAME_LENGTH = 128;
 
@@ -270,7 +367,6 @@ void handleSerial() {
   }
 }
 
-// ================= MESSAGE PROCESS =================
 void processMessage(String msg) {
   int p1 = msg.indexOf('|');
   int p2 = msg.indexOf('|', p1 + 1);
@@ -296,39 +392,78 @@ void processMessage(String msg) {
   processCommand(message);
 }
 
-// ================= COMMAND HANDLER =================
+void sendMessage(String id, String command, String data) {
+  String payload = id + "|" + command + "|" + data;
+  byte chk = calcChecksum(payload);
+
+  Serial.print(STX);
+  Serial.print(payload);
+  Serial.print("|");
+  if (chk < 16) Serial.print("0");
+  Serial.print(chk, HEX);
+  Serial.print(ETX);
+}
+#pragma endregion
+
+#pragma region Command Handler
 void processCommand(Message &message) {
   if (message.command == "PING") {
     sendMessage(message.id, "PONG", "ACK");
   }
   
   else if (message.command == "START_MEASURE") {
-    measure = true;
+    if (measurement.status != MEASURE_IDLE) {
+      sendMessage(message.id, "ERR", "MEASUREMENT ALREADY ACTIVE");
+      return;
+    }
+
     fallingCount = 0;
-    lastValue = -1;
-    lastMeasure = millis(); // reset timing
-    sendMessage(message.id, "ACK", String(fallingCount));
+    firstTrendSample = true;
+    lastMeasure = millis();
+
+    measurement.status = MEASURE_START_POSITION;
+
+    sendMessage(message.id, "ACK", "MEASUREMENT STARTED");
   }
   
-  else if (message.command == "GET_MEASURE_DATA") {
-    if (measure) {
-      int value = handleMeasure();
-      if (value != -1001) {
-          sendMessage(message.id, "MEASURE_DATA", String(value));
+  else if (message.command == "GET_MEASURE" ||
+          message.command == "GET_MEASURE_DATA") {
+
+      String statusText;
+
+      switch (measurement.status) {
+        case MEASURE_IDLE:
+          statusText = "STOPPED";
+          break;
+        case MEASURE_START_POSITION:
+          statusText = "STARTING";
+          break;
+        case MEASURE_OPENING_VALVE1:
+          statusText = "STARTING";
+          break;
+        case MEASURE_WAITING_VALVE3_CLOSE:
+          statusText = "STARTING";
+          break;
+        case MEASURE_RUNNING:
+          statusText = "RUNNING";
+          break;
+        case MEASURE_FALL_DETECTED:
+          statusText = "RUNNING";
+          break;
+        case MEASURE_STOPPING:
+          statusText = "RUNNING";
+          break;
       }
-      else {
-          sendMessage(message.id, "STOP_MEASURE", "FALL_DETECTED");
-          measure = false;
-      }
-    }
-    else {
-      sendMessage(message.id, "ERR", "Measure is not started yet.");
-    }
+
+      sendMessage(
+          message.id,
+          "MEASURE_DATA",
+          statusText + ";" + String(measurement.value, 2)
+      );
   }
-  
+
   else if (message.command == "STOP_MEASURE") {
-    measure = false;
-    // ide kell majd a measure leállítása
+    stopMeasureSequent();
     sendMessage(message.id, "ACK", "STOPPED");
   }
   
@@ -429,74 +564,121 @@ void processCommand(Message &message) {
     sendMessage(message.id, "ERR", "INVALID COMMAND");
   }
 }
+#pragma endregion
 
-// ================= MEASURE LOOP =================
-int handleMeasure() {
-  unsigned long now = millis();
+#pragma region Measure Handler
+void updateMeasure() {
+  switch (measurement.status) {
 
-  if (now - lastMeasure >= interval) {
-    lastMeasure = now;
+    case MEASURE_IDLE:
+      break;
 
-    int value = (pt1.EU + pt2.EU) / 2.0f;
+    case MEASURE_START_POSITION:
+      measurement.status = MEASURE_OPENING_VALVE1;
+      startOpenValve(valve1, "");
+      break;
 
-    // ===== Trend figyelés =====
-    if (lastValue != -1) {
-      if (value < lastValue - MIN_DELTA) {
-        fallingCount++;
-      } else {
-        fallingCount = 0;
+    case MEASURE_OPENING_VALVE1:
+      if (digitalRead(valve1.isOpenPin) == LOW) {
+        pump.start();
+        pumpStartTime = millis();
+
+        measurement.status = MEASURE_WAITING_VALVE3_CLOSE;
       }
-    }
+      break;
 
-    lastValue = value;
+    case MEASURE_WAITING_VALVE3_CLOSE:
+      if (millis() - pumpStartTime >= VALVE3_CLOSE_DELAY_MS) {
+        startCloseValve(valve3, "");
+        measurement.status = MEASURE_RUNNING;
+      }
+      break;
 
-    // ===== Stop feltétel =====
-    if (fallingCount >= FALL_THRESHOLD) {
-      measure = false;
-      return -1001;
-    }
-    return value;
+    case MEASURE_RUNNING:
+        unsigned long now = millis();
+
+        if (now - lastMeasure < MEASURE_INTERVAL_MS) {
+            break;
+        }
+
+        lastMeasure = now;
+
+        if (!measurement.valid || !isfinite(measurement.value)) {
+            break;
+        }
+
+        float currentValue = measurement.value;
+
+        if (firstTrendSample) {
+            lastValue = currentValue;
+            firstTrendSample = false;
+            fallingCount = 0;
+            break;
+        }
+
+        if (currentValue < lastValue - MIN_DELTA) {
+            fallingCount++;
+        } else {
+            fallingCount = 0;
+        }
+
+        lastValue = currentValue;
+
+        if (fallingCount >= FALL_THRESHOLD) {
+            measurement.status = MEASURE_FALL_DETECTED;
+        }
+
+        break;
+
+    case MEASURE_FALL_DETECTED:
+      stopMeasureSequent();
+      measurement.status = MEASURE_STOPPING;
+      break;
+
+    case MEASURE_STOPPING:
+      break;
   }
-  return -1;
+}
+
+void updateMeasureValue() {
+  if (!isfinite(pt1.EU) || !isfinite(pt2.EU)) {
+    measurement.valid = false;
+    return;
+  }
+
+  measurement.value = (pt1.EU + pt2.EU) / 2.0f;
+  measurement.valid = true;
 }
 
 void stopMeasureSequent() {
-  // ide kell majd a measure leállítási rész
+  measureActive = false;
+
+  pump.stop();
+
+  startCloseValve(valve1, "");
+
+  startOpenValve(valve2, "");
+  startOpenValve(valve3, "");
+
+  measurement.status = MEASURE_IDLE;
 }
+#pragma endregion
 
-// ================= SEND =================
-void sendMessage(String id, String command, String data) {
-  String payload = id + "|" + command + "|" + data;
-  byte chk = calcChecksum(payload);
-
-  Serial.print(STX);
-  Serial.print(payload);
-  Serial.print("|");
-  if (chk < 16) Serial.print("0");
-  Serial.print(chk, HEX);
-  Serial.print(ETX);
-}
-
-// ================= PARAM =================
+#pragma region Hardware Parameters
 void setParameter(String id, String data) {
-  // Megkeressük a pontosvesszőt
   int p1 = data.indexOf(';');
   
-  // HA NINCS pontosvessző, azonnal hibával térünk vissza
   if (p1 == -1) {
     sendMessage(id, "ERR", "INVALID FORMAT");
     return;
   }
 
-  // Szétvágjuk a stringet
   String param = data.substring(0, p1);
   String value = data.substring(p1 + 1);
 
-  // Levágjuk a láthatatlan újsor (\n, \r) és szóköz karaktereket
   param.trim();
   value.trim();
 
-  // 4. Paraméterek vizsgálata
   if (param == "MIN_DELTA") {
     MIN_DELTA = value.toInt();
     sendMessage(id, "ACK", String(MIN_DELTA));
@@ -515,7 +697,9 @@ void getParameter(String id, String data) {
   else if (data == "FT") sendMessage(id, "ACK", String(FALL_THRESHOLD));
   else sendMessage(id, "ERR", "UNKNOWN PARAMETER");
 }
+#pragma endregion
 
+#pragma region Hardware debug
 void setInputOutput(const String &id, const String &data) {
   int p1 = data.indexOf(';');
     
@@ -571,27 +755,27 @@ void getInputOutput(const String &id, const String &data) {
 }
 
 int getPinMode(uint8_t pin) {
-#if defined(ARDUINO_ARCH_AVR)
-  uint8_t bit = digitalPinToBitMask(pin);
-  uint8_t port = digitalPinToPort(pin);
+  #if defined(ARDUINO_ARCH_AVR)
+    uint8_t bit = digitalPinToBitMask(pin);
+    uint8_t port = digitalPinToPort(pin);
 
-  if (port == NOT_A_PIN) return -1;
+    if (port == NOT_A_PIN) return -1;
 
-  volatile uint8_t *reg = portModeRegister(port);
-  volatile uint8_t *out = portOutputRegister(port);
+    volatile uint8_t *reg = portModeRegister(port);
+    volatile uint8_t *out = portOutputRegister(port);
 
-  if (*reg & bit) {
-    return OUTPUT;
-  }
-  
-  if (*out & bit) {
-    return INPUT_PULLUP;
-  }
+    if (*reg & bit) {
+      return OUTPUT;
+    }
+    
+    if (*out & bit) {
+      return INPUT_PULLUP;
+    }
 
-  return INPUT;
-#else
-  return INPUT; 
-#endif
+    return INPUT;
+  #else
+    return INPUT; 
+  #endif
 }
 
 void getPinModeCommand(const String &id, const String &data) {
@@ -631,9 +815,9 @@ void getPinModeCommand(const String &id, const String &data) {
 
   sendMessage(id, "PIN_MODE", modeStr);
 }
+#pragma endregion
 
-// ============== VALVES ==============
-
+#pragma region Valve Control
 void startOpenValve(ValveControl &valve, String id) {
   if (digitalRead(valve.isOpenPin) == LOW) {
     digitalWrite(valve.openPin, LOW);
@@ -800,8 +984,9 @@ void updateValve(ValveControl &valve) {
       break;
   }
 }
+#pragma endregion
 
-// ============== ANALOGES ==============
+#pragma region Analog Handler
 void analogReadEnhanced(PressureMeasurement &pt) {
     pt.raw = analogRead(pt.pin);
 
@@ -817,3 +1002,4 @@ void analogReadEnhanced(PressureMeasurement &pt) {
     pt.EU = pt.EU0 +
         (pt.EU100 - pt.EU0) * (pt.percentage / 100.0f);
 }
+#pragma endregion
