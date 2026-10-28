@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Vascular_Pressure_Measurement_System.Utils;
 using System.IO;
 using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace Vascular_Pressure_Measurement_System.Configuration
 {
@@ -22,6 +23,8 @@ namespace Vascular_Pressure_Measurement_System.Configuration
                 Directory.CreateDirectory(appFolder);
                 configs["MIN_DELTA"] = "2";
                 configs["FALL_THRESHOLD"] = "3";
+                configs["PUMP_OFF_TIME"] = "800";
+                configs["PUMP_ON_TIME"] = "200";
                 WriteConfiguration(configs, WriteType.Both);
                 return;
             }
@@ -53,9 +56,16 @@ namespace Vascular_Pressure_Measurement_System.Configuration
 
             if (writeType.Contains(WriteType.File) && configs.Count > 0)
             {
-                using (StreamWriter sw = new StreamWriter(configureFile))
+                try
                 {
-                    sw.Write(overall);
+                    using (StreamWriter sw = new StreamWriter(configureFile))
+                    {
+                        sw.Write(overall);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -95,7 +105,11 @@ namespace Vascular_Pressure_Measurement_System.Configuration
                     !result.TryGetValue("MIN_DELTA", out string minDeltaStr) ||
                     !double.TryParse(minDeltaStr, out minDeltaVal) || minDeltaVal < 0 ||
                     !result.TryGetValue("FALL_THRESHOLD", out string fallThresholdStr) ||
-                    !double.TryParse(fallThresholdStr, out fallThresholdVal) || fallThresholdVal < 0)
+                    !double.TryParse(fallThresholdStr, out fallThresholdVal) || fallThresholdVal < 0 ||
+                    !result.TryGetValue("PUMP_OFF_TIME", out string pumpOffTimeStr) ||
+                    !double.TryParse(pumpOffTimeStr, out double pumpOffTimeVal) || pumpOffTimeVal < 0 ||
+                    !result.TryGetValue("PUMP_ON_TIME", out string pumpOnTimeStr) ||
+                    !double.TryParse(pumpOnTimeStr, out double pumpOnTimeVal) || pumpOnTimeVal < 0)
                 {
                     SetParameters(null, true);
                     result = ReadConfiguration();

@@ -21,11 +21,15 @@ namespace Vascular_Pressure_Measurement_System.Forms
 
                 parameterMinDelta.Text = configs["MIN_DELTA"];
                 parameterFallTreshold.Text = configs["FALL_THRESHOLD"];
+                parameterPumpOffTime.Text = configs["PUMP_OFF_TIME"];
+                parameterPumpOnTime.Text = configs["PUMP_ON_TIME"];
             }
             else
             {
                 parameterBox.Enabled = false;
             }
+
+            EnableTraceButton.Checked = Trace.IsTraceEnabled;
         }
 
         private void CancelButton_Click(object sender, System.EventArgs e)
@@ -43,6 +47,8 @@ namespace Vascular_Pressure_Measurement_System.Forms
 
             int.TryParse(parameterMinDelta.Text, out minDelta);
             int.TryParse(parameterFallTreshold.Text, out fallTreshold);
+            int.TryParse(parameterPumpOffTime.Text, out int pumpOffTime);
+            int.TryParse(parameterPumpOnTime.Text, out int pumpOnTime);
 
             if ((minDelta <= 0 || fallTreshold <= 0) && parameterBox.Enabled)
             {
@@ -53,11 +59,15 @@ namespace Vascular_Pressure_Measurement_System.Forms
             Dictionary<string, string> configs = new Dictionary<string, string>
             {
                 { "MIN_DELTA", minDelta.ToString() },
-                { "FALL_THRESHOLD", fallTreshold.ToString() }
+                { "FALL_THRESHOLD", fallTreshold.ToString() },
+                { "PUMP_OFF_TIME", pumpOffTime.ToString() },
+                { "PUMP_ON_TIME", pumpOnTime.ToString() }
             };
 
             if (parameterBox.Enabled) 
                 Configuration.Hardware.SetParameters(configs);
+
+            Trace.IsTraceEnabled = EnableTraceButton.Checked;
 
             CloseForm();
         }

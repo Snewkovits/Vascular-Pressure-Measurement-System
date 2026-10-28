@@ -38,7 +38,14 @@
             this.label4 = new System.Windows.Forms.Label();
             this.parameterMinDelta = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.EnableTraceButton = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.parameterPumpOffTime = new System.Windows.Forms.TextBox();
+            this.parameterPumpOnTime = new System.Windows.Forms.TextBox();
             this.parameterBox.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // SaveButton
@@ -55,7 +62,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 215);
+            this.label2.Location = new System.Drawing.Point(8, 361);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(114, 15);
@@ -64,7 +71,7 @@
             // 
             // ReinitButton
             // 
-            this.ReinitButton.Location = new System.Drawing.Point(162, 209);
+            this.ReinitButton.Location = new System.Drawing.Point(163, 355);
             this.ReinitButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.ReinitButton.Name = "ReinitButton";
             this.ReinitButton.Size = new System.Drawing.Size(214, 27);
@@ -85,15 +92,19 @@
             // 
             // parameterBox
             // 
+            this.parameterBox.Controls.Add(this.parameterPumpOnTime);
+            this.parameterBox.Controls.Add(this.parameterPumpOffTime);
+            this.parameterBox.Controls.Add(this.label5);
+            this.parameterBox.Controls.Add(this.label1);
             this.parameterBox.Controls.Add(this.parameterFallTreshold);
             this.parameterBox.Controls.Add(this.label4);
             this.parameterBox.Controls.Add(this.parameterMinDelta);
             this.parameterBox.Controls.Add(this.label3);
             this.parameterBox.Controls.Add(this.ReinitButton);
             this.parameterBox.Controls.Add(this.label2);
-            this.parameterBox.Location = new System.Drawing.Point(12, 231);
+            this.parameterBox.Location = new System.Drawing.Point(12, 85);
             this.parameterBox.Name = "parameterBox";
-            this.parameterBox.Size = new System.Drawing.Size(383, 242);
+            this.parameterBox.Size = new System.Drawing.Size(383, 388);
             this.parameterBox.TabIndex = 6;
             this.parameterBox.TabStop = false;
             this.parameterBox.Text = "Hardware parameters";
@@ -134,6 +145,62 @@
             this.label3.TabIndex = 6;
             this.label3.Text = "Fall Delta";
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.EnableTraceButton);
+            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(383, 67);
+            this.groupBox1.TabIndex = 9;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Software parameters";
+            // 
+            // EnableTraceButton
+            // 
+            this.EnableTraceButton.AutoSize = true;
+            this.EnableTraceButton.Location = new System.Drawing.Point(11, 32);
+            this.EnableTraceButton.Name = "EnableTraceButton";
+            this.EnableTraceButton.Size = new System.Drawing.Size(95, 19);
+            this.EnableTraceButton.TabIndex = 10;
+            this.EnableTraceButton.Text = "Enable Trace";
+            this.EnableTraceButton.UseVisualStyleBackColor = true;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(8, 87);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(84, 15);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "Pump off time";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(8, 115);
+            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(83, 15);
+            this.label5.TabIndex = 10;
+            this.label5.Text = "Pump on time";
+            // 
+            // parameterPumpOffTime
+            // 
+            this.parameterPumpOffTime.Location = new System.Drawing.Point(163, 84);
+            this.parameterPumpOffTime.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.parameterPumpOffTime.Name = "parameterPumpOffTime";
+            this.parameterPumpOffTime.Size = new System.Drawing.Size(213, 22);
+            this.parameterPumpOffTime.TabIndex = 11;
+            // 
+            // parameterPumpOnTime
+            // 
+            this.parameterPumpOnTime.Location = new System.Drawing.Point(163, 112);
+            this.parameterPumpOnTime.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.parameterPumpOnTime.Name = "parameterPumpOnTime";
+            this.parameterPumpOnTime.Size = new System.Drawing.Size(213, 22);
+            this.parameterPumpOnTime.TabIndex = 12;
+            // 
             // SettingsForm
             // 
             this.AcceptButton = this.SaveButton;
@@ -142,6 +209,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(247)))), ((int)(((byte)(247)))));
             this.ClientSize = new System.Drawing.Size(407, 519);
             this.ControlBox = false;
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.parameterBox);
             this.Controls.Add(this.CancelButton);
             this.Controls.Add(this.SaveButton);
@@ -155,6 +223,8 @@
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Settings_KeyUp);
             this.parameterBox.ResumeLayout(false);
             this.parameterBox.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -169,5 +239,11 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox parameterMinDelta;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.CheckBox EnableTraceButton;
+        private System.Windows.Forms.TextBox parameterPumpOnTime;
+        private System.Windows.Forms.TextBox parameterPumpOffTime;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label1;
     }
 }

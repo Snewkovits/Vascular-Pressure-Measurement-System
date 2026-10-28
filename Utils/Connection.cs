@@ -24,13 +24,15 @@ namespace Vascular_Pressure_Measurement_System.Utils
             serialPort = null;
 
             foreach (string port in ports) {
-                serialPort = new SerialPort(port, 1000000, Parity.None, 8, StopBits.One) 
+                serialPort = new SerialPort(port, 1000000, Parity.None, 8, StopBits.One)
                 {
                     Encoding = Encoding.ASCII,
                     ReadTimeout = 100,
                     WriteTimeout = 100,
                     ReadBufferSize = 65536,
-                    WriteBufferSize = 65536
+                    WriteBufferSize = 65536,
+                    DtrEnable = false,
+                    RtsEnable = false
                 };
 
                 try
@@ -56,7 +58,10 @@ namespace Vascular_Pressure_Measurement_System.Utils
                 }
                 finally
                 {
-                    serialPort.Close();
+                    if (serialPort != null)
+                    {
+                        serialPort.Close();
+                    }
                 }
             }
 
@@ -213,6 +218,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
                     }
 
                     faildAttempt = 0;
+                    Trace.WriteSerialTrace($"Sent: {msg} | Received: {response}");
                     return new string[] { responsePayload[1], responsePayload[2] };
                 }
                 catch (TimeoutException)

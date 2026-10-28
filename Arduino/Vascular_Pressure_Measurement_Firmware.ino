@@ -83,11 +83,11 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
   bool measureActive = false;
 
   unsigned long pumpStartTime = 0;
-  const unsigned long VALVE3_CLOSE_DELAY_MS = 5000;
+  const unsigned long VALVE3_CLOSE_DELAY_MS = 15000;
 
   const unsigned long MEASURE_INTERVAL_MS = 10;
-  const float MIN_DELTA = 2.0f;
-  const int FALL_THRESHOLD = 3;
+  float MIN_DELTA = 2.0f;
+  int FALL_THRESHOLD = 3;
 
   float lastValue = 0.0f;
   int fallingCount = 0;
@@ -143,11 +143,16 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
   #pragma region Pump
   enum PumpState {
     PUMP_IDLE,
-    PUMP_RUNNING
+    PUMP_RUNNING_ON,
+    PUMP_RUNNING_OFF
   };
 
   struct PumpControl {
     PumpState state = PUMP_IDLE;
+
+    unsigned long timer;
+    unsigned long onTime = 200;
+    unsigned long offTime = 800;
 
     int pin;
 
@@ -159,9 +164,29 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
       state = PUMP_IDLE;
     }
 
+    void update() {
+      switch (state) {
+        case PUMP_IDLE: return;
+        case PUMP_RUNNING_ON:
+          digitalWrite(pin, HIGH);
+          if (millis() - onTime >= timer) {
+            state = PUMP_RUNNING_OFF;
+            timer = millis();
+          }
+          break;
+        case PUMP_RUNNING_OFF:
+          digitalWrite(pin, LOW);
+          if (millis() - offTime >= timer) {
+            state = PUMP_RUNNING_ON;
+            timer = millis();
+          }
+          break;
+      }
+    }
+
     void start() {
-      digitalWrite(pin, HIGH);
-      state = PUMP_RUNNING;
+      timer = millis();
+      state = PUMP_RUNNING_ON;
     }
 
     void stop() {
@@ -180,7 +205,7 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
     float EU100 = 200.0;
     float EU;
 
-    float U0 = 1.1;
+    float U0 = 1.0;
     float U100 = 4.67;
     float U;
 
@@ -205,11 +230,6 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
     String checksum;
   };
 
-  Message inner;
-  message.id = -1;
-  message.command = "INNER";
-  message.data = "";
-
   #pragma region Parameters
   ValveControl valve1;
   ValveControl valve2;
@@ -227,14 +247,8 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
   bool measure = false;
   int measureStatus = 0;
 
-  unsigned long lastMeasure = 0;
   const unsigned long interval = 10;
 
-  int lastValue = -1;
-  int fallingCount = 0;
-
-  int FALL_THRESHOLD = 3;   // ennyi egymás utáni csökkenés kell
-  int MIN_DELTA = 2;        // zajszűrés
   #pragma endregion
 
 #pragma endregion
@@ -246,8 +260,6 @@ void setup() {
   for (int i = 0; i < sizeof(wiredDigitals) / sizeof(wiredDigitals[0]); i++) {
     pinMode(wiredDigitals[i], INPUT);
   }
-
-  Serial.println(sizeof(wiredDigitals));
 
   for (int i = 0; i < sizeof(relays) / sizeof(relays[0]); i++) {
     relays[i] = wiredDigitals[i * 2];
@@ -327,6 +339,7 @@ void loop() {
 
   updateMeasureValue();
   updateMeasure();
+  pump.update();
 }
 #pragma endregion
 
@@ -350,8 +363,10 @@ void handleSerial() {
       inFrame = true;
     }
     else if (c == ETX && inFrame) {
+      digitalWrite(LED_BUILTIN, HIGH);
       processMessage(buffer);
       inFrame = false;
+      digitalWrite(LED_BUILTIN, LOW);
     }
     else if (inFrame) {
       if (buffer.length() < MAX_FRAME_LENGTH) {
@@ -372,7 +387,10 @@ void processMessage(String msg) {
   int p2 = msg.indexOf('|', p1 + 1);
   int p3 = msg.lastIndexOf('|');
 
-  if (p1 == -1 || p2 == -1 || p3 == -1) return;
+  if (p1 == -1 || p2 == -1 || p3 == -1) {
+    sendMessage("-1", "ERR", "INVALID FORMAT");
+    return;
+  }
   
   Message message;
   message.id = msg.substring(0, p1);
@@ -408,7 +426,9 @@ void sendMessage(String id, String command, String data) {
 #pragma region Command Handler
 void processCommand(Message &message) {
   if (message.command == "PING") {
+    digitalWrite(LED_BUILTIN, HIGH);
     sendMessage(message.id, "PONG", "ACK");
+    digitalWrite(LED_BUILTIN, LOW);
   }
   
   else if (message.command == "START_MEASURE") {
@@ -423,12 +443,10 @@ void processCommand(Message &message) {
 
     measurement.status = MEASURE_START_POSITION;
 
-    sendMessage(message.id, "ACK", "MEASUREMENT STARTED");
+    sendMessage(message.id, "ACK", "MEASUREMENT STARTING");
   }
   
-  else if (message.command == "GET_MEASURE" ||
-          message.command == "GET_MEASURE_DATA") {
-
+  else if (message.command == "GET_MEASURE_DATA") {
       String statusText;
 
       switch (measurement.status) {
@@ -463,8 +481,8 @@ void processCommand(Message &message) {
   }
 
   else if (message.command == "STOP_MEASURE") {
-    stopMeasureSequent();
     sendMessage(message.id, "ACK", "STOPPED");
+    stopMeasureSequent();
   }
   
   else if (message.command == "SET_PARAM") {
@@ -547,12 +565,15 @@ void processCommand(Message &message) {
     switch (valveNumber) {
       case 1:
         positioningValve(valve1, position, message.id);
+        sendMessage(message.id, "ACK", "START POSITIONING VALVE " + String(valveNumber));
         break;
       case 2:
         positioningValve(valve2, position, message.id);
+        sendMessage(message.id, "ACK", "START POSITIONING VALVE " + String(valveNumber));
         break;
       case 3:
         positioningValve(valve3, position, message.id);
+        sendMessage(message.id, "ACK", "START POSITIONING VALVE " + String(valveNumber));
         break;
       default:
         sendMessage(message.id, "ERR", "INVALID VALVE");
@@ -636,6 +657,7 @@ void updateMeasure() {
       break;
 
     case MEASURE_STOPPING:
+      measurement.status = MEASURE_IDLE;
       break;
   }
 }
@@ -680,12 +702,20 @@ void setParameter(String id, String data) {
   value.trim();
 
   if (param == "MIN_DELTA") {
-    MIN_DELTA = value.toInt();
+    MIN_DELTA = value.toFloat();
     sendMessage(id, "ACK", String(MIN_DELTA));
   }
   else if (param == "FALL_THRESHOLD") {
     FALL_THRESHOLD = value.toInt();
     sendMessage(id, "ACK", String(FALL_THRESHOLD));
+  }
+  else if (param == "PUMP_OFF_TIME") {
+    pump.offTime = value.toInt();
+    sendMessage(id, "ACK", String(pump.offTime));
+  }
+  else if (param == "PUMP_ON_TIME") {
+    pump.onTime = value.toInt();
+    sendMessage(id, "ACK", String(pump.onTime));
   }
   else {
     sendMessage(id, "ERR", "UNKNOWN PARAMETER");
@@ -693,8 +723,10 @@ void setParameter(String id, String data) {
 }
 
 void getParameter(String id, String data) {
-  if (data == "MD") sendMessage(id, "ACK", String(MIN_DELTA));
-  else if (data == "FT") sendMessage(id, "ACK", String(FALL_THRESHOLD));
+  if (data == "MIN_DELTA") sendMessage(id, "ACK", String(MIN_DELTA));
+  else if (data == "FALL_TRESHOLD") sendMessage(id, "ACK", String(FALL_THRESHOLD));
+  else if (data == "PUMP_OFF_TIME") sendMessage(id, "ACK", String(pump.offTime));
+  else if (data == "PUMP_ON_TIME") sendMessage(id, "ACK", String(pump.onTime));
   else sendMessage(id, "ERR", "UNKNOWN PARAMETER");
 }
 #pragma endregion
@@ -829,7 +861,6 @@ void startOpenValve(ValveControl &valve, String id) {
   digitalWrite(valve.openPin, HIGH);
 
   valve.state = VALVE_OPENING;
-  sendMessage(id, "ACK", "STARTED OPENING");
 }
 
 void startCloseValve(ValveControl &valve, String id) {
@@ -843,7 +874,6 @@ void startCloseValve(ValveControl &valve, String id) {
   digitalWrite(valve.closePin, HIGH);
 
   valve.state = VALVE_CLOSING;
-  sendMessage(id, "ACK", "STARTED CLOSING");
 }
 
 void positioningValve(ValveControl &valve, int position, String id) {

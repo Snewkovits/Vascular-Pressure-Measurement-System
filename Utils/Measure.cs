@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -71,15 +70,16 @@ namespace Vascular_Pressure_Measurement_System.Utils
                         }
 
 
-                        // Ha az Arduino magától állt le (FALL_DETECTED)
-                        if (data[0] == "STOP_MEASURE") break;
+                        // Ha az Arduino magától állt le
+                        if (data[0] == "STOPPED") break;
 
                         // Ha normál mérési adat jött
                         if (data[0] == "MEASURE_DATA")
                         {
+                            string measurementData = data[1].Split(';')[1];
                             lock (_lock)
                             {
-                                Buffer.Enqueue(data[1]);
+                                Buffer.Enqueue(measurementData);
                             }
                             counter++;
                         }
