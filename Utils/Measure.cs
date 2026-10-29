@@ -48,6 +48,8 @@ namespace Vascular_Pressure_Measurement_System.Utils
                 return; // Ha nem jött ACK a startra, el se indítjuk a szálat
             }
 
+            Configuration.Hardware.SetParameters(); // A mérés megkezdése előtt beállítjuk a paramétereket az Arduino-n.
+
             new Thread(() =>
             {
                 // Itt lefoglaljuk a portot a teljes mérés idejére!

@@ -83,7 +83,7 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
   bool measureActive = false;
 
   unsigned long pumpStartTime = 0;
-  const unsigned long VALVE3_CLOSE_DELAY_MS = 15000;
+  unsigned long VALVE3_CLOSE_DELAY_MS = 15000;
 
   const unsigned long MEASURE_INTERVAL_MS = 10;
   float MIN_DELTA = 2.0f;
@@ -133,7 +133,7 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
 
   void startOpenValve(ValveControl &valve, String id);
   void startCloseValve(ValveControl &valve, String id);
-  void positioningValve(ValveControl &valve, int position, String id);
+  void positioningValve(ValveControl &valve, int position);
   void stopValve(ValveControl &valve);
   void calibrateValve(ValveControl &valve);
   void updateValve(ValveControl &valve);
@@ -205,11 +205,11 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
     float EU100 = 200.0;
     float EU;
 
-    float U0 = 1.0;
+    float U0 = 1.1;
     float U100 = 4.67;
     float U;
 
-    int raw0 = 248;
+    int raw0 = 225;
     int raw100 = 955;
     int raw;
 
@@ -297,29 +297,12 @@ void setup() {
   pt0.pin = A0;
   pt1.pin = A2;
   pt2.pin = A4;
-  /*
-  while (true) {
-    analogReadEnhanced(pt1);
-    Serial.print("EU: ");
-    Serial.print(pt1.EU);
-    Serial.println(" kPa");
-    
-    Serial.print("U: ");
-    Serial.print(pt1.U);
-    Serial.println(" V");
-    
-    Serial.print("RAW: ");
-    Serial.println(pt1.raw);
-    delay(2000);
-  }
-  */
 }
 #pragma endregion
 
 #pragma region Main
 void loop() {
   handleSerial();   // mindig fusson
-
   if (!valve1.calibrated && !valve1.calibration)
       calibrateValve(valve1);
 
@@ -564,21 +547,27 @@ void processCommand(Message &message) {
 
     switch (valveNumber) {
       case 1:
-        positioningValve(valve1, position, message.id);
+        positioningValve(valve1, position);
         sendMessage(message.id, "ACK", "START POSITIONING VALVE " + String(valveNumber));
         break;
       case 2:
-        positioningValve(valve2, position, message.id);
+        positioningValve(valve2, position);
         sendMessage(message.id, "ACK", "START POSITIONING VALVE " + String(valveNumber));
         break;
       case 3:
-        positioningValve(valve3, position, message.id);
+        positioningValve(valve3, position);
         sendMessage(message.id, "ACK", "START POSITIONING VALVE " + String(valveNumber));
         break;
       default:
         sendMessage(message.id, "ERR", "INVALID VALVE");
         break;
     }
+  }
+
+  else if (message.command == "RECALIBRATE") {
+    valve1.calibrated = false;
+    valve2.calibrated = false;
+    valve3.calibrated = false;
   }
 
   else {
@@ -717,6 +706,14 @@ void setParameter(String id, String data) {
     pump.onTime = value.toInt();
     sendMessage(id, "ACK", String(pump.onTime));
   }
+  else if (param == "VALVE2_CLOSE_POSITION") {
+    positioningValve(valve2, value.toInt());
+    sendMessage(id, "ACK", String(valve2.targetPosition));
+  }
+  else if (param == "VALVE3_CLOSE_DELAY_MS") {
+    VALVE3_CLOSE_DELAY_MS = value.toInt();
+    sendMessage(id, "ACK", String(VALVE3_CLOSE_DELAY_MS));
+  }
   else {
     sendMessage(id, "ERR", "UNKNOWN PARAMETER");
   }
@@ -727,6 +724,8 @@ void getParameter(String id, String data) {
   else if (data == "FALL_TRESHOLD") sendMessage(id, "ACK", String(FALL_THRESHOLD));
   else if (data == "PUMP_OFF_TIME") sendMessage(id, "ACK", String(pump.offTime));
   else if (data == "PUMP_ON_TIME") sendMessage(id, "ACK", String(pump.onTime));
+  else if (data == "VALVE2_CLOSE_POSITION") sendMessage(id, "ACK", String(valve2.targetPosition));
+  else if (data == "VALVE3_CLOSE_DELAY_MS") sendMessage(id, "ACK", String(VALVE3_CLOSE_DELAY_MS));
   else sendMessage(id, "ERR", "UNKNOWN PARAMETER");
 }
 #pragma endregion
@@ -876,9 +875,8 @@ void startCloseValve(ValveControl &valve, String id) {
   valve.state = VALVE_CLOSING;
 }
 
-void positioningValve(ValveControl &valve, int position, String id) {
+void positioningValve(ValveControl &valve, int position) {
   if (position < 0 || position > 100) {
-    sendMessage(id, "ERR", "INVALID POSITION");
     return;
   }
 
