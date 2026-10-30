@@ -23,7 +23,7 @@ namespace Vascular_Pressure_Measurement_System.Forms
                 parameterFallTreshold.Text = configs["FALL_THRESHOLD"];
                 parameterPumpOffTime.Text = configs["PUMP_OFF_TIME"];
                 parameterPumpOnTime.Text = configs["PUMP_ON_TIME"];
-                parameterValve2ClosePosition.Text = configs["VALVE2_CLOSE_POSITION"];
+                parameterValve2OpenPosition.Text = configs["VALVE2_OPEN_POSITION"];
                 parameterValve3CloseDelay.Text = configs["VALVE3_CLOSE_DELAY_MS"];
             }
             else
@@ -51,14 +51,14 @@ namespace Vascular_Pressure_Measurement_System.Forms
             int.TryParse(parameterFallTreshold.Text, out fallTreshold);
             int.TryParse(parameterPumpOffTime.Text, out int pumpOffTime);
             int.TryParse(parameterPumpOnTime.Text, out int pumpOnTime);
-            int.TryParse(parameterValve2ClosePosition.Text, out int valve2ClosePosition);
+            int.TryParse(parameterValve2OpenPosition.Text, out int valve2OpenPosition);
             int.TryParse(parameterValve3CloseDelay.Text, out int valve3CloseDelay);
 
             if ((minDelta <= 0          || 
                 fallTreshold <= 0       || 
                 pumpOffTime <= 0        || 
                 pumpOnTime <= 0         || 
-                valve2ClosePosition < 0 || 
+                valve2OpenPosition < 0 || 
                 valve3CloseDelay <= 0)  && 
                 parameterBox.Enabled)
             {
@@ -66,9 +66,9 @@ namespace Vascular_Pressure_Measurement_System.Forms
                 return;
             }
 
-            if (valve2ClosePosition < 0 || valve2ClosePosition > 100)
+            if (valve2OpenPosition < 0 || valve2OpenPosition > 100)
             {
-                MessageBox.Show("Valve 2 close position must be between 0 and 100! Please check your input and try again.", "Parameters", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Valve 2 open position must be between 0 and 100! Please check your input and try again.", "Parameters", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -78,7 +78,7 @@ namespace Vascular_Pressure_Measurement_System.Forms
                 { "FALL_THRESHOLD", fallTreshold.ToString() },
                 { "PUMP_OFF_TIME", pumpOffTime.ToString() },
                 { "PUMP_ON_TIME", pumpOnTime.ToString() },
-                { "VALVE2_CLOSE_POSITION", valve2ClosePosition.ToString() },
+                { "VALVE2_OPEN_POSITION", valve2OpenPosition.ToString() },
                 { "VALVE3_CLOSE_DELAY_MS", valve3CloseDelay.ToString() }
             };
 

@@ -308,7 +308,7 @@ namespace Vascular_Pressure_Measurement_System.Utils
             public const string GET_PIN_MODE = "GET_PIN_MODE";
             public const string OPEN_VALVE = "OPEN_VALVE";
             public const string CLOSE_VALVE = "CLOSE_VALVE";
-            public const string CLOSE_VALVE_TO = "CLOSE_VALVE_TO";
+            public const string SET_VALVE_POSITION = "SET_VALVE_POSITION";
             public const string RECALIBRATE = "RECALIBRATE";
             public const string ACK = "ACK";
             public const string ERR = "ERR";

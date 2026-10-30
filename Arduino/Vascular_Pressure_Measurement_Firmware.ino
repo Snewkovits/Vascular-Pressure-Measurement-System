@@ -668,7 +668,6 @@ void stopMeasureSequent() {
 
   startCloseValve(valve1, "");
 
-  startOpenValve(valve2, "");
   startOpenValve(valve3, "");
 
   measurement.status = MEASURE_IDLE;
@@ -706,7 +705,7 @@ void setParameter(String id, String data) {
     pump.onTime = value.toInt();
     sendMessage(id, "ACK", String(pump.onTime));
   }
-  else if (param == "VALVE2_CLOSE_POSITION") {
+  else if (param == "VALVE2_OPEN_POSITION") {
     positioningValve(valve2, value.toInt());
     sendMessage(id, "ACK", String(valve2.targetPosition));
   }
@@ -724,7 +723,7 @@ void getParameter(String id, String data) {
   else if (data == "FALL_TRESHOLD") sendMessage(id, "ACK", String(FALL_THRESHOLD));
   else if (data == "PUMP_OFF_TIME") sendMessage(id, "ACK", String(pump.offTime));
   else if (data == "PUMP_ON_TIME") sendMessage(id, "ACK", String(pump.onTime));
-  else if (data == "VALVE2_CLOSE_POSITION") sendMessage(id, "ACK", String(valve2.targetPosition));
+  else if (data == "VALVE2_OPEN_POSITION") sendMessage(id, "ACK", String(valve2.targetPosition));
   else if (data == "VALVE3_CLOSE_DELAY_MS") sendMessage(id, "ACK", String(VALVE3_CLOSE_DELAY_MS));
   else sendMessage(id, "ERR", "UNKNOWN PARAMETER");
 }

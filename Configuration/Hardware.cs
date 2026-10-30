@@ -26,7 +26,7 @@ namespace Vascular_Pressure_Measurement_System.Configuration
                 configs["FALL_THRESHOLD"] = "3";
                 configs["PUMP_OFF_TIME"] = "800";
                 configs["PUMP_ON_TIME"] = "200";
-                configs["VALVE2_CLOSE_POSITION"] = "0";
+                configs["VALVE2_OPEN_POSITION"] = "0";
                 configs["VALVE3_CLOSE_DELAY_MS"] = "15000";
                 WriteConfiguration(configs, WriteType.Both);
                 return;
@@ -53,7 +53,14 @@ namespace Vascular_Pressure_Measurement_System.Configuration
 
                 if (writeType.Contains(WriteType.Device))
                 {
-                    Connection.SendMessage(Connection.CommandType.SET_PARAM, current);
+                    if (config.Key == "VALVE2_OPEN_POSITION")
+                    {
+                        Connection.SendMessage(Connection.CommandType.SET_VALVE_POSITION, $"2;{config.Value}");
+                    }
+                    else
+                    {
+                        Connection.SendMessage(Connection.CommandType.SET_PARAM, current);
+                    }
                 }
             }
 
@@ -82,7 +89,7 @@ namespace Vascular_Pressure_Measurement_System.Configuration
                     { "FALL_THRESHOLD", "3" },
                     { "PUMP_OFF_TIME", "800" },
                     { "PUMP_ON_TIME", "200" },
-                    { "VALVE2_CLOSE_POSITION", "0" },
+                    { "VALVE2_OPEN_POSITION", "0" },
                     { "VALVE3_CLOSE_DELAY_MS", "15000" }
                 };
 
@@ -144,8 +151,8 @@ namespace Vascular_Pressure_Measurement_System.Configuration
                     out double pumpOnTimeValue) &&
                 pumpOnTimeValue >= 0 &&
 
-                result.TryGetValue("VALVE2_CLOSE_POSITION", out string valve2ClosePosition) &&
-                double.TryParse(valve2ClosePosition,
+                result.TryGetValue("VALVE2_OPEN_POSITION", out string valve2OpenPosition) &&
+                double.TryParse(valve2OpenPosition,
                     NumberStyles.Float,
                     CultureInfo.InvariantCulture,
                     out double valve2ClosePositionValue) &&
