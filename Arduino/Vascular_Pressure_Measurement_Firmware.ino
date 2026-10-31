@@ -323,6 +323,131 @@ void loop() {
   updateMeasureValue();
   updateMeasure();
   pump.update();
+/*
+
+  Serial.println(F("----- pt0 Measurement -----"));
+  Serial.print(F("Pin: "));
+  Serial.println(pt0.pin);
+
+  Serial.print(F("EU0: "));
+  Serial.println(pt0.EU0, 3);
+
+  Serial.print(F("EU100: "));
+  Serial.println(pt0.EU100, 3);
+
+  Serial.print(F("EU: "));
+  Serial.println(pt0.EU, 3);
+
+  Serial.print(F("U0: "));
+  Serial.println(pt0.U0, 3);
+
+  Serial.print(F("U100: "));
+  Serial.println(pt0.U100, 3);
+
+  Serial.print(F("U: "));
+  Serial.println(pt0.U, 3);
+
+  Serial.print(F("Raw0: "));
+  Serial.println(pt0.raw0);
+
+  Serial.print(F("Raw100: "));
+  Serial.println(pt0.raw100);
+
+  Serial.print(F("Raw: "));
+  Serial.println(pt0.raw);
+
+  Serial.print(F("Percentage: "));
+  Serial.print(pt0.percentage, 2);
+  Serial.println(F("%"));
+
+  Serial.print(F("Valid: "));
+  Serial.println(pt0.valid ? F("true") : F("false"));
+
+  Serial.println(F("--------------------------------"));
+
+  Serial.println(F("----- pt1 Measurement -----"));
+  Serial.print(F("Pin: "));
+  Serial.println(pt1.pin);
+
+  Serial.print(F("EU0: "));
+  Serial.println(pt1.EU0, 3);
+
+  Serial.print(F("EU100: "));
+  Serial.println(pt1.EU100, 3);
+
+  Serial.print(F("EU: "));
+  Serial.println(pt1.EU, 3);
+
+  Serial.print(F("U0: "));
+  Serial.println(pt1.U0, 3);
+
+  Serial.print(F("U100: "));
+  Serial.println(pt1.U100, 3);
+
+  Serial.print(F("U: "));
+  Serial.println(pt1.U, 3);
+
+  Serial.print(F("Raw0: "));
+  Serial.println(pt1.raw0);
+
+  Serial.print(F("Raw100: "));
+  Serial.println(pt1.raw100);
+
+  Serial.print(F("Raw: "));
+  Serial.println(pt1.raw);
+
+  Serial.print(F("Percentage: "));
+  Serial.print(pt1.percentage, 2);
+  Serial.println(F("%"));
+
+  Serial.print(F("Valid: "));
+  Serial.println(pt1.valid ? F("true") : F("false"));
+
+  Serial.println(F("--------------------------------"));
+
+  Serial.println(F("----- pt2 Measurement -----"));
+  Serial.print(F("Pin: "));
+  Serial.println(pt2.pin);
+
+  Serial.print(F("EU0: "));
+  Serial.println(pt2.EU0, 3);
+
+  Serial.print(F("EU100: "));
+  Serial.println(pt2.EU100, 3);
+
+  Serial.print(F("EU: "));
+  Serial.println(pt2.EU, 3);
+
+  Serial.print(F("U0: "));
+  Serial.println(pt2.U0, 3);
+
+  Serial.print(F("U100: "));
+  Serial.println(pt2.U100, 3);
+
+  Serial.print(F("U: "));
+  Serial.println(pt2.U, 3);
+
+  Serial.print(F("Raw0: "));
+  Serial.println(pt2.raw0);
+
+  Serial.print(F("Raw100: "));
+  Serial.println(pt2.raw100);
+
+  Serial.print(F("Raw: "));
+  Serial.println(pt2.raw);
+
+  Serial.print(F("Percentage: "));
+  Serial.print(pt2.percentage, 2);
+  Serial.println(F("%"));
+
+  Serial.print(F("Valid: "));
+  Serial.println(pt2.valid ? F("true") : F("false"));
+
+  Serial.println(F("--------------------------------"));
+
+  delay(500);
+*/
+
 }
 #pragma endregion
 
@@ -570,6 +695,19 @@ void processCommand(Message &message) {
     valve3.calibrated = false;
   }
 
+  else if (message.command == "START_PUMP") {
+    pump.start();
+    sendMessage(message.id, "START_PUMP", "ACK");
+    startOpenValve(valve1, message.id);
+    startOpenValve(valve2, message.id);
+    startOpenValve(valve3, message.id);
+  }
+
+  else if (message.command == "STOP_PUMP") {
+    pump.stop();
+    sendMessage(message.id, "STOP_PUMP", "ACK");
+  }
+
   else {
     sendMessage(message.id, "ERR", "INVALID COMMAND");
   }
@@ -657,7 +795,8 @@ void updateMeasureValue() {
     return;
   }
 
-  measurement.value = (pt1.EU + pt2.EU) / 2.0f;
+  //measurement.value = (pt1.EU + pt2.EU) / 2.0f;
+  measurement.value = pt1.EU;
   measurement.valid = true;
 }
 
