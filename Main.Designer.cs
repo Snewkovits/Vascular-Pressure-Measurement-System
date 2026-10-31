@@ -40,6 +40,8 @@
             this.SaveButton = new System.Windows.Forms.Button();
             this.LoadButton = new System.Windows.Forms.Button();
             this.AboutButton = new System.Windows.Forms.Button();
+            this.SystemFlushingButton = new System.Windows.Forms.Button();
+            this.DrainingButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.Chart)).BeginInit();
             this.SuspendLayout();
             // 
@@ -178,12 +180,42 @@
             this.AboutButton.UseVisualStyleBackColor = false;
             this.AboutButton.Click += new System.EventHandler(this.AboutButton_Click);
             // 
+            // SystemFlushingButton
+            // 
+            this.SystemFlushingButton.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.SystemFlushingButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.SystemFlushingButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.SystemFlushingButton.Location = new System.Drawing.Point(2, 78);
+            this.SystemFlushingButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.SystemFlushingButton.Name = "SystemFlushingButton";
+            this.SystemFlushingButton.Size = new System.Drawing.Size(107, 27);
+            this.SystemFlushingButton.TabIndex = 7;
+            this.SystemFlushingButton.Text = "Flushing: OFF";
+            this.SystemFlushingButton.UseVisualStyleBackColor = false;
+            this.SystemFlushingButton.Click += new System.EventHandler(this.SystemFlushingButton_Click);
+            // 
+            // DrainingButton
+            // 
+            this.DrainingButton.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.DrainingButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.DrainingButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.DrainingButton.Location = new System.Drawing.Point(2, 111);
+            this.DrainingButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.DrainingButton.Name = "DrainingButton";
+            this.DrainingButton.Size = new System.Drawing.Size(107, 27);
+            this.DrainingButton.TabIndex = 8;
+            this.DrainingButton.Text = "Draining";
+            this.DrainingButton.UseVisualStyleBackColor = false;
+            this.DrainingButton.Click += new System.EventHandler(this.DrainingButton_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(68)))), ((int)(((byte)(56)))));
             this.ClientSize = new System.Drawing.Size(933, 519);
+            this.Controls.Add(this.DrainingButton);
+            this.Controls.Add(this.SystemFlushingButton);
             this.Controls.Add(this.LoadButton);
             this.Controls.Add(this.SaveButton);
             this.Controls.Add(this.AboutButton);
@@ -215,6 +247,8 @@
         private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Button LoadButton;
         private System.Windows.Forms.Button AboutButton;
+        private System.Windows.Forms.Button SystemFlushingButton;
+        private System.Windows.Forms.Button DrainingButton;
     }
 }
 

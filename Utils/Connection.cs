@@ -310,6 +310,8 @@ namespace Vascular_Pressure_Measurement_System.Utils
             public const string CLOSE_VALVE = "CLOSE_VALVE";
             public const string SET_VALVE_POSITION = "SET_VALVE_POSITION";
             public const string RECALIBRATE = "RECALIBRATE";
+            public const string START_PUMP = "START_PUMP";
+            public const string STOP_PUMP = "STOP_PUMP";
             public const string ACK = "ACK";
             public const string ERR = "ERR";
         }

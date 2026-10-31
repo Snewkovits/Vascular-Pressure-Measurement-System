@@ -34,6 +34,9 @@ namespace Vascular_Pressure_Measurement_System
             DisableButton(ForceStopButton);
             DisableButton(StartMeasuring);
             DisableButton(SaveButton);
+            SystemFlushingButton.Text = "Flushing: OFF";
+            DisableButton(SystemFlushingButton);
+            DisableButton(DrainingButton);
 
             KeyPreview = true;
         }
@@ -62,6 +65,9 @@ namespace Vascular_Pressure_Measurement_System
             Chart.ChartAreas[0].AxisX.Maximum = double.NaN;
             DisableButton(ForceStopButton);
             DisableButton(StartMeasuring);
+            SystemFlushingButton.Text = "Flushing: OFF";
+            DisableButton(SystemFlushingButton);
+            DisableButton(DrainingButton);
         }
 
         private void Main_SizeChanged(object sender, EventArgs e)
@@ -99,6 +105,9 @@ namespace Vascular_Pressure_Measurement_System
                 {
                     this.Text = "VRP - Device connected";
                     EnableButton(StartMeasuring);
+                    SystemFlushingButton.Text = "Flushing: OFF";
+                    EnableButton(SystemFlushingButton);
+                    EnableButton(DrainingButton);
                 }));
             }
             else
@@ -108,6 +117,9 @@ namespace Vascular_Pressure_Measurement_System
                     this.Text = "VRP - Device disconnected";
                     DisableButton(ForceStopButton);
                     DisableButton(StartMeasuring);
+                    DisableButton(SystemFlushingButton);
+                    DisableButton(DrainingButton);
+                    SystemFlushingButton.Text = "Flushing: OFF";
                     if (settingsForm != null)
                     {
                         settingsForm.Close();
@@ -170,6 +182,9 @@ namespace Vascular_Pressure_Measurement_System
             DisableButton(StartMeasuring);
             DisableButton(SaveButton);
             DisableButton(SettingsButton);
+            DisableButton(SystemFlushingButton);
+            DisableButton(DrainingButton);
+            SystemFlushingButton.Text = "Flushing: OFF";
 
             chartUpdateTimer.Interval = 10;
             chartUpdateTimer.Tick += ContinousChartUpdate;
@@ -197,6 +212,9 @@ namespace Vascular_Pressure_Measurement_System
             measure.Stop();
             DisableButton(ForceStopButton);
             EnableButton(StartMeasuring);
+            EnableButton(SystemFlushingButton);
+            EnableButton(DrainingButton);
+            SystemFlushingButton.Text = "Flushing: OFF";
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
@@ -369,6 +387,31 @@ namespace Vascular_Pressure_Measurement_System
         {
             if (e.KeyCode.Equals(Keys.ControlKey))
                 isCtrlPressed = false;
+        }
+
+        bool flushinEnabled = false;
+        private void SystemFlushingButton_Click(object sender, EventArgs e)
+        {
+            flushinEnabled = !flushinEnabled;
+            if (flushinEnabled)
+            {
+                string[] recieved = Connection.SendMessage(Connection.CommandType.START_PUMP, string.Empty);
+                if (recieved[1] == "ACK")
+                    SystemFlushingButton.Text = "Flushing: ON";
+            }
+            else
+            {
+                string[] recieved = Connection.SendMessage(Connection.CommandType.STOP_PUMP, string.Empty);
+                if (recieved[1] == "ACK")
+                    SystemFlushingButton.Text = "Flushing: OFF";
+            }
+        }
+
+        private void DrainingButton_Click(object sender, EventArgs e)
+        {
+            Connection.SendMessage(Connection.CommandType.STOP_PUMP, string.Empty);
+            Connection.SendMessage(Connection.CommandType.CLOSE_VALVE, "1");
+            Connection.SendMessage(Connection.CommandType.OPEN_VALVE, "3");
         }
     }
 }
