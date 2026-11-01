@@ -38,6 +38,10 @@ namespace Vascular_Pressure_Measurement_System.Utils
             running = true;
             stopMeasure = false; // Biztonsági reset indításkor
             int counter = 0;
+            
+            bool hardwareStop = false; // Jelzi, hogy a STOP_MEASURE parancsot megkaptuk az Arduinótól
+            TimeSpan afterStop = TimeSpan.FromSeconds(20); // A mérés leállítása után mennyi ideig várjon a szál, mielőtt teljesen leállna.
+            TimeSpan cureent = TimeSpan.Zero;
 
             // Elküldjük a start parancsot. (A SendMessage le-lockol, elküldi, majd feloldja)
             string[] data = Connection.SendMessage("START_MEASURE", "");
@@ -73,7 +77,19 @@ namespace Vascular_Pressure_Measurement_System.Utils
 
 
                         // Ha az Arduino magától állt le
-                        if (data[0] == "STOPPED") break;
+                        if (data[0] == "STOPPED")
+                        {
+                            hardwareStop = true;
+                        }
+
+                        if (hardwareStop)
+                        {
+                            cureent += TimeSpan.FromMilliseconds(1);
+                            if (cureent >= afterStop)
+                            {
+                                stopMeasure = true;
+                            }
+                        }
 
                         // Ha normál mérési adat jött
                         if (data[0] == "MEASURE_DATA")

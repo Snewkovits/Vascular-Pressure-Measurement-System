@@ -155,7 +155,7 @@ namespace Vascular_Pressure_Measurement_System
                     string data = measure.Buffer.Dequeue().ToString(); // Kivesszük a bufferből az első elemet, és stringgé alakítjuk, mivel a Measure osztály stringként tárolja az adatokat.
                     if (double.TryParse(data, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double result)) // Megpróbáljuk double-á alakítani a stringet, hogy numerikus értékként tudjuk megjeleníteni a Chart-on. Ha sikerül, hozzáadjuk a Chart-hoz egy új pontként, ahol az X érték a counter * 0.01 (ami a mért időt jelenti másodpercben), és az Y érték pedig a result (a mért nyomás értéke).
                     {
-                        Chart.Series[0].Points.AddXY(counter * 0.01, (result * 7.50062f));
+                        Chart.Series[0].Points.AddXY(counter * 0.01, (result));
                         counter++;
                     }
                 }

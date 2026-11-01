@@ -144,7 +144,8 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
   enum PumpState {
     PUMP_IDLE,
     PUMP_RUNNING_ON,
-    PUMP_RUNNING_OFF
+    PUMP_RUNNING_OFF,
+    PUMP_RUNNING
   };
 
   struct PumpControl {
@@ -181,6 +182,9 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
             timer = millis();
           }
           break;
+        case PUMP_RUNNING:
+          digitalWrite(pin, HIGH);
+          break;
       }
     }
 
@@ -202,7 +206,7 @@ int inputs[sizeof(wiredDigitals) / sizeof(wiredDigitals[0])];
     uint8_t pin;
 
     float EU0 = 0.0;
-    float EU100 = 200.0;
+    float EU100 = 1500.123;
     float EU;
 
     float U0 = 1.1;
@@ -301,6 +305,9 @@ void setup() {
 #pragma endregion
 
 #pragma region Main
+
+unsigned long testTimer = 0;
+
 void loop() {
   handleSerial();   // mindig fusson
   if (!valve1.calibrated && !valve1.calibration)
@@ -316,137 +323,21 @@ void loop() {
   updateValve(valve2);
   updateValve(valve3);
 
-  analogReadEnhanced(pt0);
+  //analogReadEnhanced(pt0);
   analogReadEnhanced(pt1);
   analogReadEnhanced(pt2);
 
   updateMeasureValue();
   updateMeasure();
   pump.update();
+
 /*
-
-  Serial.println(F("----- pt0 Measurement -----"));
-  Serial.print(F("Pin: "));
-  Serial.println(pt0.pin);
-
-  Serial.print(F("EU0: "));
-  Serial.println(pt0.EU0, 3);
-
-  Serial.print(F("EU100: "));
-  Serial.println(pt0.EU100, 3);
-
-  Serial.print(F("EU: "));
-  Serial.println(pt0.EU, 3);
-
-  Serial.print(F("U0: "));
-  Serial.println(pt0.U0, 3);
-
-  Serial.print(F("U100: "));
-  Serial.println(pt0.U100, 3);
-
-  Serial.print(F("U: "));
-  Serial.println(pt0.U, 3);
-
-  Serial.print(F("Raw0: "));
-  Serial.println(pt0.raw0);
-
-  Serial.print(F("Raw100: "));
-  Serial.println(pt0.raw100);
-
-  Serial.print(F("Raw: "));
-  Serial.println(pt0.raw);
-
-  Serial.print(F("Percentage: "));
-  Serial.print(pt0.percentage, 2);
-  Serial.println(F("%"));
-
-  Serial.print(F("Valid: "));
-  Serial.println(pt0.valid ? F("true") : F("false"));
-
-  Serial.println(F("--------------------------------"));
-
-  Serial.println(F("----- pt1 Measurement -----"));
-  Serial.print(F("Pin: "));
-  Serial.println(pt1.pin);
-
-  Serial.print(F("EU0: "));
-  Serial.println(pt1.EU0, 3);
-
-  Serial.print(F("EU100: "));
-  Serial.println(pt1.EU100, 3);
-
-  Serial.print(F("EU: "));
-  Serial.println(pt1.EU, 3);
-
-  Serial.print(F("U0: "));
-  Serial.println(pt1.U0, 3);
-
-  Serial.print(F("U100: "));
-  Serial.println(pt1.U100, 3);
-
-  Serial.print(F("U: "));
-  Serial.println(pt1.U, 3);
-
-  Serial.print(F("Raw0: "));
-  Serial.println(pt1.raw0);
-
-  Serial.print(F("Raw100: "));
-  Serial.println(pt1.raw100);
-
-  Serial.print(F("Raw: "));
-  Serial.println(pt1.raw);
-
-  Serial.print(F("Percentage: "));
-  Serial.print(pt1.percentage, 2);
-  Serial.println(F("%"));
-
-  Serial.print(F("Valid: "));
-  Serial.println(pt1.valid ? F("true") : F("false"));
-
-  Serial.println(F("--------------------------------"));
-
-  Serial.println(F("----- pt2 Measurement -----"));
-  Serial.print(F("Pin: "));
-  Serial.println(pt2.pin);
-
-  Serial.print(F("EU0: "));
-  Serial.println(pt2.EU0, 3);
-
-  Serial.print(F("EU100: "));
-  Serial.println(pt2.EU100, 3);
-
-  Serial.print(F("EU: "));
-  Serial.println(pt2.EU, 3);
-
-  Serial.print(F("U0: "));
-  Serial.println(pt2.U0, 3);
-
-  Serial.print(F("U100: "));
-  Serial.println(pt2.U100, 3);
-
-  Serial.print(F("U: "));
-  Serial.println(pt2.U, 3);
-
-  Serial.print(F("Raw0: "));
-  Serial.println(pt2.raw0);
-
-  Serial.print(F("Raw100: "));
-  Serial.println(pt2.raw100);
-
-  Serial.print(F("Raw: "));
-  Serial.println(pt2.raw);
-
-  Serial.print(F("Percentage: "));
-  Serial.print(pt2.percentage, 2);
-  Serial.println(F("%"));
-
-  Serial.print(F("Valid: "));
-  Serial.println(pt2.valid ? F("true") : F("false"));
-
-  Serial.println(F("--------------------------------"));
-
-  delay(500);
-*/
+  if (testTimer + 400 < millis()) {
+    Serial.print(F("EU: "));
+    Serial.println(pt1.EU, 3);
+    testTimer = millis();
+  }
+  */
 
 }
 #pragma endregion
@@ -755,7 +646,7 @@ void updateMeasure() {
             break;
         }
 
-        float currentValue = measurement.value;
+        float currentValue = pt1.EU;
 
         if (firstTrendSample) {
             lastValue = currentValue;
@@ -843,10 +734,6 @@ void setParameter(String id, String data) {
   else if (param == "PUMP_ON_TIME") {
     pump.onTime = value.toInt();
     sendMessage(id, "ACK", String(pump.onTime));
-  }
-  else if (param == "VALVE2_OPEN_POSITION") {
-    positioningValve(valve2, value.toInt());
-    sendMessage(id, "ACK", String(valve2.targetPosition));
   }
   else if (param == "VALVE3_CLOSE_DELAY_MS") {
     VALVE3_CLOSE_DELAY_MS = value.toInt();
